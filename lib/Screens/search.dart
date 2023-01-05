@@ -71,7 +71,7 @@ class _SearchScreenState extends State<SearchScreen> {
           onPressed: () {},
           icon: Icon(
             Icons.filter_alt,
-            size: 32,
+            size: 40,
             color: primaryColor,
           ),
         ),
