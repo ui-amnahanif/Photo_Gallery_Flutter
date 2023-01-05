@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_gallery/Models/albums.dart';
 import 'package:photo_gallery/Screens/camera.dart';
+import 'package:photo_gallery/Screens/photosScreen.dart';
 import 'package:photo_gallery/Screens/search.dart';
 import 'package:photo_gallery/Utilities/CustomWdigets/customalbum.dart';
 import 'package:photo_gallery/Utilities/CustomWdigets/custombutton.dart';
@@ -73,7 +74,13 @@ class _AlbummsScreenState extends State<AlbummsScreen>
         crossAxisCount: 3,
         children: [
           ...alist.map(
-            (e) => CustomAlbum(e.title, e.image, 85, 100),
+            (e) => GestureDetector(
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return PhotoScreen(e.title);
+                  }));
+                },
+                child: CustomAlbum(e.title, e.image, 85, 100)),
           ),
           ...alist.map(
             (e) => CustomAlbum(e.title, e.image, 85, 100),

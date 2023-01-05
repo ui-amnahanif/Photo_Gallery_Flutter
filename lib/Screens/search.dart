@@ -68,7 +68,9 @@ class _SearchScreenState extends State<SearchScreen> {
           searchController,
         ),
         IconButton(
-          onPressed: () {},
+          onPressed: () {
+            // showDialog(context: context, builder: (context) {return Container()});
+          },
           icon: Icon(
             Icons.filter_alt,
             size: 40,
@@ -78,7 +80,12 @@ class _SearchScreenState extends State<SearchScreen> {
       ],
     );
   }
+// Future<void> showFilterDialog(BuildContext context)async{
+// return await showDialog(context: context, builder: (context){
 
+//   return Container();
+// });
+// }
   Widget getalbums() {
     return Container(
       //color: Colors.amber,
