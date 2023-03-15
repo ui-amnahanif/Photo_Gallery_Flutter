@@ -1,11 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:photo_gallery/Models/albums.dart';
-import 'package:photo_gallery/Screens/camera.dart';
+import 'package:photo_gallery/DBHelper/dbhelper.dart';
+import 'package:photo_gallery/Models/album.dart';
 import 'package:photo_gallery/Screens/photosScreen.dart';
-import 'package:photo_gallery/Screens/search.dart';
 import 'package:photo_gallery/Utilities/CustomWdigets/customalbum.dart';
-import 'package:photo_gallery/Utilities/CustomWdigets/custombutton.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
 
 class AlbummsScreen extends StatefulWidget {
@@ -16,12 +13,21 @@ class AlbummsScreen extends StatefulWidget {
 class _AlbummsScreenState extends State<AlbummsScreen>
     with TickerProviderStateMixin {
   List<Album> alist = [];
+  List<Album> peopleAlbumList = [];
+  List<Album> eventAlbumList = [];
+  List<Album> locationAlbumList = [];
   double? width;
   double? height;
   @override
   void initState() {
     // TODO: implement initState
-    alist = Album.getAlbums();
+    // alist = Album.getAlbums();
+    //setState(() {});
+    getAllAlbums();
+  }
+
+  void getAllAlbums() async {
+    alist = await DbHelper.instance.getAllAlbums();
     setState(() {});
   }
 
@@ -29,7 +35,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
   Widget build(BuildContext context) {
     height = MediaQuery.of(context).size.height;
     width = MediaQuery.of(context).size.width;
-    TabController _tabController = TabController(length: 3, vsync: this);
+    TabController _tabController = TabController(length: 4, vsync: this);
     return Scaffold(
       appBar: AppBar(
         title: Text("Albums"),
@@ -45,6 +51,9 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 labelColor: Colors.black,
                 tabs: [
                   Text(
+                    "All",
+                  ),
+                  Text(
                     "People",
                   ),
                   Text(
@@ -58,9 +67,12 @@ class _AlbummsScreenState extends State<AlbummsScreen>
           Container(
             width: width,
             height: height! * 0.71,
-            child: TabBarView(
-                controller: _tabController,
-                children: [peoplealbums(), peoplealbums(), peoplealbums()]),
+            child: TabBarView(controller: _tabController, children: [
+              peoplealbums(),
+              peoplealbums(),
+              peoplealbums(),
+              peoplealbums()
+            ]),
           ),
         ],
       ),
@@ -75,34 +87,17 @@ class _AlbummsScreenState extends State<AlbummsScreen>
         children: [
           ...alist.map(
             (e) => GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return PhotoScreen(e.title);
-                  }));
-                },
-                child: CustomAlbum(e.title, e.image, 85, 100)),
-          ),
-          ...alist.map(
-            (e) => CustomAlbum(e.title, e.image, 85, 100),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return PhotosScreen(e.title, e.id);
+                }));
+              },
+              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
+                  width! * 0.5), //85 100
+            ),
           ),
         ],
       ),
     );
-
-    // return Padding(
-    //   padding: const EdgeInsets.only(top: 15, left: 15),
-    //   child: Wrap(
-    //     spacing: 14,
-    //     runSpacing: 15,
-    //     children: [
-    //       ...alist.map(
-    //         (e) => CustomAlbum(e.title, e.image, 85, 100),
-    //       ),
-    //       ...alist.map(
-    //         (e) => CustomAlbum(e.title, e.image, 85, 100),
-    //       ),
-    //     ],
-    //   ),
-    // );
   }
 }

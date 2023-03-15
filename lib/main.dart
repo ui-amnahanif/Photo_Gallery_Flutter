@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:photo_gallery/Screens/addEditDetailsScreen.dart';
 import 'package:photo_gallery/Screens/home.dart';
 
 void main() {

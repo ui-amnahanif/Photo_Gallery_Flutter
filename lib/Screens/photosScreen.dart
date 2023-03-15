@@ -1,27 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:photo_gallery/Models/albums.dart';
+import 'package:photo_gallery/Models/album.dart';
+import 'package:photo_gallery/Screens/photoScreen.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
-
+import '../DBHelper/dbhelper.dart';
+import '../Models/photo.dart';
 import '../Utilities/CustomWdigets/customalbum.dart';
 
-class PhotoScreen extends StatefulWidget {
+class PhotosScreen extends StatefulWidget {
   String albumTitle;
-  PhotoScreen(this.albumTitle);
+  int album_id;
+  PhotosScreen(this.albumTitle, this.album_id);
 
   @override
-  State<PhotoScreen> createState() => _PhotoScreenState();
+  State<PhotosScreen> createState() => _PhotosScreenState();
 }
 
-class _PhotoScreenState extends State<PhotoScreen> {
-  List<Album> alist = [];
+class _PhotosScreenState extends State<PhotosScreen> {
+  List<Photo> plist = [];
   double? width;
   double? height;
   @override
   void initState() {
-    // TODO: implement initState
-    alist = Album.getAlbums();
+    getAllPhotos();
+  }
+
+  getAllPhotos() async {
+    plist = await DbHelper.instance.getPhotosOfAlbum(widget.album_id);
     setState(() {});
   }
 
@@ -34,14 +38,18 @@ class _PhotoScreenState extends State<PhotoScreen> {
         backgroundColor: primaryColor,
       ),
       body: GridView.count(
-        padding: EdgeInsets.only(top: 15),
+        padding: EdgeInsets.only(top: height! * 0.020),
         crossAxisCount: 3,
         children: [
-          ...alist.map(
-            (e) => CustomAlbum(null, e.image, 100, 115),
-          ),
-          ...alist.map(
-            (e) => CustomAlbum(null, e.image, 100, 115),
+          ...plist.map(
+            (e) => GestureDetector(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return PhotoScreen(e.title!, e.id!);
+                }));
+              },
+              child: CustomAlbum(null, e.path, height! * 0.138, width! * 0.31),
+            ),
           ),
         ],
       ),

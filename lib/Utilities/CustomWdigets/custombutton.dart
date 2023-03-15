@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 
-class CustomBotton extends StatefulWidget {
+class CustomButton extends StatefulWidget {
   String text;
   double height;
   double width;
   Color color;
   Color borderColor;
   Color textColor;
-  CustomBotton(this.text, this.height, this.width, this.color, this.borderColor,
-      this.textColor);
+  Function func;
+  CustomButton(this.text, this.height, this.width, this.color, this.borderColor,
+      this.textColor, this.func);
 
   @override
-  State<CustomBotton> createState() => _CustomBottonState();
+  State<CustomButton> createState() => _CustomButtonState();
 }
 
-class _CustomBottonState extends State<CustomBotton> {
+class _CustomButtonState extends State<CustomButton> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -37,6 +38,7 @@ class _CustomBottonState extends State<CustomBotton> {
           ),
         ),
       ),
+      onTap: () => widget.func(),
     );
   }
 }

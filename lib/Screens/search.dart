@@ -4,7 +4,7 @@ import 'package:photo_gallery/Utilities/CustomWdigets/customalbum.dart';
 import 'package:photo_gallery/Utilities/CustomWdigets/customtextformfield.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
 
-import '../Models/albums.dart';
+import '../Models/album.dart';
 
 class SearchScreen extends StatefulWidget {
   @override
@@ -19,8 +19,8 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     // TODO: implement initState
-    alist = Album.getAlbums();
-    setState(() {});
+    // alist = Album.getAlbums();
+    // setState(() {});
   }
 
   @override
@@ -100,7 +100,7 @@ class _SearchScreenState extends State<SearchScreen> {
               const SizedBox(
                 width: 10,
               ),
-              CustomAlbum(alist[index].title, alist[index].image, 85, 100),
+              // CustomAlbum(alist[index].title, alist[index].image, 85, 100),
             ],
           );
         },
@@ -116,11 +116,11 @@ class _SearchScreenState extends State<SearchScreen> {
       child: Wrap(
         spacing: width! * 0.02, //7,
         runSpacing: width! * -0.03,
-        children: [
-          ...alist.map(
-            (e) => CustomAlbum(null, e.image, 100, 110),
-          ),
-        ],
+        // children: [
+        //   ...alist.map(
+        //     (e) => CustomAlbum(null, e.image, 100, 110),
+        //   ),
+        // ],
       ),
     );
   }

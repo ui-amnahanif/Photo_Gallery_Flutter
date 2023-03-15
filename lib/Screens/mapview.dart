@@ -1,6 +1,4 @@
 import 'dart:async';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
 
@@ -20,7 +18,7 @@ class MapViewScreen extends StatelessWidget {
       ),
       // body: GoogleMap(
       //   initialCameraPosition: _kGooglePlex,
-      //   onMapCreated: (GoogleMapController controller) {
+      //   onMapCreated: (GoogleMapController controller){
       //     _controller.complete(controller);
       //   },
       // ),

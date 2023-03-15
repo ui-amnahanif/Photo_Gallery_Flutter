@@ -22,7 +22,7 @@ class _CustomAlbumState extends State<CustomAlbum> {
               decoration: BoxDecoration(
                 image: DecorationImage(
                   image: AssetImage(widget.image),
-                  fit: BoxFit.fill,
+                  fit: BoxFit.cover,
                 ),
                 borderRadius: BorderRadius.circular(13),
               ),

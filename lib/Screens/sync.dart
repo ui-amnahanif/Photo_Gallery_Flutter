@@ -25,14 +25,8 @@ class SyncScreen extends StatelessWidget {
               const SizedBox(
                 height: 30,
               ),
-              CustomBotton(
-                "Sync Now",
-                50,
-                180,
-                primaryColor,
-                primaryColor,
-                Colors.white,
-              )
+              CustomButton("Sync Now", 50, 180, primaryColor, primaryColor,
+                  Colors.white, () {})
             ],
           ),
         ),
