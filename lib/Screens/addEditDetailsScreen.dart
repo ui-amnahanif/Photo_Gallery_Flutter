@@ -11,7 +11,8 @@ import '../DBHelper/dbhelper.dart';
 
 class AddEditDetailsScreen extends StatefulWidget {
   int photo_id;
-  AddEditDetailsScreen(this.photo_id);
+  int album_id;
+  AddEditDetailsScreen(this.photo_id, this.album_id);
 
   @override
   State<AddEditDetailsScreen> createState() => _AddEditDetailsScreenState();
@@ -36,6 +37,7 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
   }
 
   getPeopleEventDetails() async {
+    photo = await DbHelper.instance.getPhotoById(widget.photo_id);
     plist = await DbHelper.instance.getPersonDetailsByPhotoId(widget.photo_id);
     elist = await DbHelper.instance.getEventDetailsByPhotoId(widget.photo_id);
     setState(() {});
@@ -222,8 +224,9 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
   addeditfunction() async {
     //location pe kaam krna hai
     await DbHelper.instance.editPhotobyid(photo);
-    await DbHelper.instance.inserteditPersonbyid(widget.photo_id, plist);
-    await DbHelper.instance.inserteditEventbyid(widget.photo_id, elist);
+    await DbHelper.instance
+        .inserteditPersonAndAlbumbyid(photo, plist, widget.album_id);
+    await DbHelper.instance.inserteditEventbyid(photo, elist, widget.album_id);
     setState(() {});
   }
 }

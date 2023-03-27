@@ -91,26 +91,29 @@ class DbHelper {
     db.execute(query);
     print("DB CREATED");
     query = '''
-          Insert into photo(title, path) values
-          ("image1","assets/images/amna-1.jpeg"),
-          ("image2","assets/images/amna-2.jpg"),
-          ("image3","assets/images/amna-3.jpg"),
-          ("image4","assets/images/amna-alesha.jpg"),
-          ("image5","assets/images/amna-hassan-1.jpeg"),
-          ("image6","assets/images/amna-hassan-2.jpg"),
-          ("image7","assets/images/amna-hassan-3.jpg"),
-          ("image8","assets/images/amna-saman.jpeg"),
-          ("image9","assets/images/amna-siqlain-mama-papa.jpg"),
-          ("image0","assets/images/hassan-1.jpeg"),
-          ("image10","assets/images/hassan-2.jpg"),
-          ("image11","assets/images/hassan-siqlain-mama-papa.jpg")
+          Insert into photo(title, path,date_taken) values
+          ("image1","assets/images/amna-1.jpeg","2023:02:21 14:57:20"),
+          ("IMG-20210703-WA0091.jpg","assets/images/IMG-20210703-WA0091.jpg","2021:02:21 14:57:20"),
+          ("image3","assets/images/amna-3.jpg","2022:02:21 14:57:20"),
+          ("image4","assets/images/amna-alesha.jpg","2020:02:21 14:57:20"),
+          ("image5","assets/images/amna-hassan-1.jpeg","2023:02:21 14:57:20"),
+          ("image6","assets/images/amna-hassan-2.jpg","2023:02:21 14:57:20"),
+          ("image7","assets/images/amna-hassan-3.jpg","2023:02:21 14:57:20"),
+          ("image8","assets/images/amna-saman.jpeg","2023:02:21 14:57:20"),
+          ("image9","assets/images/amna-siqlain-mama-papa.jpg","2022:02:21 14:57:20"),
+          ("image10","assets/images/hassan-1.jpeg","2023:02:21 14:57:20"),
+          ("WhatsAppImage2023-03-20at5.21.41AM","assets/images/WhatsAppImage2023-03-20at5.21.41AM.jpeg","2022:02:21 14:57:20"),
+          ("IMG-20210704-WA0002","assets/images/IMG-20210704-WA0002.jpg","2021:02:21 14:57:20"),
+          ("IMG-20210704-WA0003","assets/images/IMG-20210704-WA0003.jpg","2021:02:21 14:57:20"),
+          ("WhatsAppImage2023-03-20at5.22.24AM","assets/images/WhatsAppImage2023-03-20at5.22.24AM.jpeg","2022:02:21 14:57:20")
+      
 ''';
     db.rawInsert(query);
     print("Inserted into picture's table");
 
     query = '''
           Insert into Album(title, cover_photo) values
-           ("others","assets/images/amna-2.jpg")
+           ("others","assets/images/amna-siqlain-mama-papa.jpg")
          
 ''';
     // ("Amna","assets/images/amna-2.jpg"),
@@ -125,7 +128,7 @@ class DbHelper {
 
     query = '''
           Insert into AlbumPhoto(album_id, photo_id) values
-         (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(1,11)
+         (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(1,11),(1,12),(1,13),(1,14)
           
 ''';
     // (1,"1111"),(1,"2222"),(1,"3333"),(1,"4444"),(1,"5555"),(1,"6666"),(1,"7777"),(1,"8888"),(1,"9999"),
@@ -160,14 +163,35 @@ class DbHelper {
 
   Future<List<Album>> getPeopleAlbums() async {
     //not completed
-    Database db = await instance.database;
-    List<Map<String, dynamic>> data = await db.query("Album");
+    List<Person> person_list = [];
     List<Album> album_list = [];
-    for (int i = 0; i < data.length; i++) {
-      Album a = Album.fromMap(data[i]);
-      album_list.add(a);
+    Database db = await instance.database;
+    List<Map<String, dynamic>> data1 = await db.query("Person");
+    for (int i = 0; i < data1.length; i++) {
+      person_list.add(Person.fromMap(data1[i]));
     }
-    print("data length ${album_list.length}");
+    for (int i = 0; i < person_list.length; i++) {
+      List<Map<String, dynamic>> data = await db
+          .query("Album", where: 'title=?', whereArgs: [person_list[i].name]);
+      album_list.add(Album.fromMap(data[0]));
+    }
+    return album_list;
+  }
+
+  Future<List<Album>> getEventAlbums() async {
+    //not completed
+    List<Event> event_list = [];
+    List<Album> album_list = [];
+    Database db = await instance.database;
+    List<Map<String, dynamic>> data1 = await db.query("Event");
+    for (int i = 0; i < data1.length; i++) {
+      event_list.add(Event.fromMap(data1[i]));
+    }
+    for (int i = 0; i < event_list.length; i++) {
+      List<Map<String, dynamic>> data = await db
+          .query("Album", where: 'title=?', whereArgs: [event_list[i].name]);
+      album_list.add(Album.fromMap(data[0]));
+    }
     return album_list;
   }
 
@@ -236,55 +260,128 @@ class DbHelper {
     print("Photo Table updated succesfully");
   }
 
-  Future<void> inserteditPersonbyid(int id, List<Person> plist) async {
+  Future<void> inserteditPersonAndAlbumbyid(
+      Photo photo, List<Person> plist, int album_id) async {
     Database db = await instance.database;
-    List<int> person_ids = [];
-    List<Map<String, dynamic>> data =
-        await db.query("PhotoPerson", where: "photo_id=?", whereArgs: [id]);
+    List<Person> personsList = [];
+    bool isAlbuminserted = false;
+    List<Map<String, dynamic>> data = await db.query("Person");
+
     for (int i = 0; i < data.length; i++) {
-      person_ids.add(data[i]["person_id"]);
+      personsList.add(Person.fromMap(data[i]));
     }
+
     for (int i = 0; i < plist.length; i++) {
-      bool ispresent = false;
-      for (int j = 0; j < person_ids.length; j++) {
-        if (plist[i].id == person_ids[j]) {
-          ispresent = true;
+      bool isidpresent = false;
+      bool isnamepresent = false;
+      Person presentPerson = Person();
+      for (int j = 0; j < personsList.length; j++) {
+        if (plist[i].id == personsList[j].id) {
+          isidpresent = true;
+        }
+        if (plist[i].name == personsList[j].name) {
+          isnamepresent = true;
+          presentPerson = personsList[j];
         }
       }
-      if (ispresent) {
-        db.update("Person", plist[i].toMap(),
-            where: "id=?", whereArgs: [plist[i].id]);
+      if (isidpresent) {
+        db.update("Person", plist[i].toMap(), //updating name of a person
+            where: "id=?",
+            whereArgs: [plist[i].id]);
+        db.update("Album", plist[i].toMap(), //edit album name
+            where: "id=?",
+            whereArgs: [album_id]);
+      } else if (isnamepresent) {
+        var value = {'photo_id': photo.id, 'person_id': presentPerson.id};
+        db.insert("PhotoPerson",
+            value); //if person already exists than add in photoperson table
+        List<Map<String, dynamic>> data3 = await db
+            .query("Album", where: "title=?", whereArgs: [presentPerson.name]);
+        Album a = Album.fromMap(data3[0]);
+        value = {
+          'album_id': a.id,
+          'photo_id': photo.id
+        }; //if album already exists then insert into albumphoto
+        db.insert("AlbumPhoto", value);
+        isAlbuminserted = true;
       } else {
-        int person_id = await db.insert("Person", plist[i].toMap());
-        var value = {'photo_id': id, 'person_id': person_id};
+        int person_id = await db.insert("Person",
+            plist[i].toMap()); //inserting into person and photoperson table
+        var value = {'photo_id': photo.id, 'person_id': person_id};
         db.insert("PhotoPerson", value);
+        Album a = Album();
+        a.title = plist[i].name;
+        a.cover_photo = photo.path;
+        int a_id = await db.insert("Album", a.toMap()); //inserting into album
+        value = {'album_id': a_id, 'photo_id': photo.id};
+        db.insert("AlbumPhoto", value);
+        isAlbuminserted = true;
       }
+    }
+    if (isAlbuminserted) {
+      await db.delete('AlbumPhoto',
+          where: 'album_id = ? AND photo_id=?', whereArgs: [1, photo.id]);
     }
   }
 
-  Future<void> inserteditEventbyid(int id, List<Event> elist) async {
+  Future<void> inserteditEventbyid(
+      Photo photo, List<Event> elist, int album_id) async {
     Database db = await instance.database;
-    List<int> event_ids = [];
-    List<Map<String, dynamic>> data =
-        await db.query("PhotoEvent", where: "photo_id=?", whereArgs: [id]);
+    bool isAlbuminserted = false;
+    List<Event> eventsList = [];
+    List<Map<String, dynamic>> data = await db.query("Event");
+
     for (int i = 0; i < data.length; i++) {
-      event_ids.add(data[i]["event_id"]);
+      eventsList.add(Event.fromMap(data[i]));
     }
+
     for (int i = 0; i < elist.length; i++) {
-      bool ispresent = false;
-      for (int j = 0; j < event_ids.length; j++) {
-        if (elist[i].id == event_ids[j]) {
-          ispresent = true;
+      bool isidpresent = false;
+      bool isnamepresent = false;
+      Event presentEvent = Event();
+      for (int j = 0; j < eventsList.length; j++) {
+        if (elist[i].id == eventsList[j].id) {
+          isidpresent = true;
+        }
+        if (elist[i].name == eventsList[j].name) {
+          isnamepresent = true;
+          presentEvent = eventsList[j];
         }
       }
-      if (ispresent) {
+      if (isidpresent) {
         db.update("Event", elist[i].toMap(),
             where: "id=?", whereArgs: [elist[i].id]);
+        db.update("Album", elist[i].toMap(), //edit album name
+            where: "id=?",
+            whereArgs: [album_id]);
+      } else if (isnamepresent) {
+        var value = {'photo_id': photo.id, 'event_id': presentEvent.id};
+        db.insert("PhotoEvent", value);
+        List<Map<String, dynamic>> data3 = await db
+            .query("Album", where: "title=?", whereArgs: [presentEvent.name]);
+        Album a = Album.fromMap(data3[0]);
+        value = {
+          'album_id': a.id,
+          'photo_id': photo.id
+        }; //if album already exists then insert into albumphoto
+        db.insert("AlbumPhoto", value);
+        isAlbuminserted = true;
       } else {
         int event_id = await db.insert("Event", elist[i].toMap());
-        var value = {'photo_id': id, 'event_id': event_id};
+        var value = {'photo_id': photo.id, 'event_id': event_id};
         db.insert("PhotoEvent", value);
+        Album a = Album();
+        a.title = elist[i].name;
+        a.cover_photo = photo.path;
+        int a_id = await db.insert("Album", a.toMap()); //inserting into album
+        value = {'album_id': a_id, 'photo_id': photo.id};
+        db.insert("AlbumPhoto", value);
+        isAlbuminserted = true;
       }
+    }
+    if (isAlbuminserted) {
+      await db.delete('AlbumPhoto',
+          where: 'album_id = ? AND photo_id=?', whereArgs: [1, photo.id]);
     }
   }
 }

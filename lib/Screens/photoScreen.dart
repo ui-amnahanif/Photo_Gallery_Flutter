@@ -9,7 +9,8 @@ import '../Utilities/CustomWdigets/customalbum.dart';
 class PhotoScreen extends StatefulWidget {
   String photoTitle;
   int photo_id;
-  PhotoScreen(this.photoTitle, this.photo_id);
+  int album_id;
+  PhotoScreen(this.photoTitle, this.photo_id, this.album_id);
 
   @override
   State<PhotoScreen> createState() => _PhotoScreenState();
@@ -79,7 +80,7 @@ class _PhotoScreenState extends State<PhotoScreen> {
         break;
       case 2:
         Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return AddEditDetailsScreen(widget.photo_id);
+          return AddEditDetailsScreen(widget.photo_id, widget.album_id);
         }));
         print("Edit Details");
         break;

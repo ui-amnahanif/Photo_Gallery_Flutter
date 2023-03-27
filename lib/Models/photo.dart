@@ -6,8 +6,8 @@ class Photo {
   Float? lat;
   Float? lng;
   String path = "";
-  DateTime? date_taken;
-  DateTime? last_modified_date;
+  String? date_taken;
+  String? last_modified_date;
   Photo();
 
   Map<String, dynamic> toMap() {

@@ -30,10 +30,14 @@ class _CustomAlbumState extends State<CustomAlbum> {
               width: widget.width //100,
               ),
           SizedBox(height: widget.text != null ? 6 : 0),
-          Text(
-            widget.text != null ? widget.text! : " ",
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          )
+          Container(
+            height: widget.text != null ? 30 : 0,
+            child: Text(
+              widget.text != null ? widget.text! : " ",
+              style: const TextStyle(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
         ],
       ),
     );

@@ -1,5 +1,5 @@
 class Album {
-  late int id;
+  int? id;
   late String title;
   late String cover_photo;
   Album();

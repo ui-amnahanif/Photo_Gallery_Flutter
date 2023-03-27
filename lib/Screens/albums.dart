@@ -12,10 +12,10 @@ class AlbummsScreen extends StatefulWidget {
 
 class _AlbummsScreenState extends State<AlbummsScreen>
     with TickerProviderStateMixin {
-  List<Album> alist = [];
-  List<Album> peopleAlbumList = [];
-  List<Album> eventAlbumList = [];
-  List<Album> locationAlbumList = [];
+  List<Album> allAlbumslist = [];
+  List<Album> peopleAlbumsList = [];
+  List<Album> eventAlbumsList = [];
+  List<Album> locationAlbumsList = [];
   double? width;
   double? height;
   @override
@@ -27,7 +27,9 @@ class _AlbummsScreenState extends State<AlbummsScreen>
   }
 
   void getAllAlbums() async {
-    alist = await DbHelper.instance.getAllAlbums();
+    allAlbumslist = await DbHelper.instance.getAllAlbums();
+    peopleAlbumsList = await DbHelper.instance.getPeopleAlbums();
+    eventAlbumsList = await DbHelper.instance.getEventAlbums();
     setState(() {});
   }
 
@@ -41,6 +43,12 @@ class _AlbummsScreenState extends State<AlbummsScreen>
         title: Text("Albums"),
         backgroundColor: primaryColor,
       ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {},
+      //   child: Icon(Icons.camera_alt),
+      //   elevation: 18,
+      //   backgroundColor: primaryColor,
+      // ),
       body: Column(
         children: [
           Container(
@@ -68,10 +76,10 @@ class _AlbummsScreenState extends State<AlbummsScreen>
             width: width,
             height: height! * 0.71,
             child: TabBarView(controller: _tabController, children: [
-              peoplealbums(),
-              peoplealbums(),
-              peoplealbums(),
-              peoplealbums()
+              allAlbums(),
+              peopleAlbums(),
+              eventAlbums(),
+              allAlbums()
             ]),
           ),
         ],
@@ -79,21 +87,65 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     );
   }
 
-  Widget peoplealbums() {
+  Widget allAlbums() {
     return Container(
       padding: EdgeInsets.only(top: 15),
       child: GridView.count(
         crossAxisCount: 3,
         children: [
-          ...alist.map(
+          ...allAlbumslist.map(
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return PhotosScreen(e.title, e.id);
+                  return PhotosScreen(e.title, e.id!);
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
-                  width! * 0.5), //85 100
+                  width! * 0.3), //85 100
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget peopleAlbums() {
+    return Container(
+      padding: EdgeInsets.only(top: 15),
+      child: GridView.count(
+        crossAxisCount: 3,
+        children: [
+          ...peopleAlbumsList.map(
+            (e) => GestureDetector(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return PhotosScreen(e.title, e.id!);
+                }));
+              },
+              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
+                  width! * 0.3), //85 100
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget eventAlbums() {
+    return Container(
+      padding: EdgeInsets.only(top: 15),
+      child: GridView.count(
+        crossAxisCount: 3,
+        children: [
+          ...eventAlbumsList.map(
+            (e) => GestureDetector(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return PhotosScreen(e.title, e.id!);
+                }));
+              },
+              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
+                  width! * 0.3), //85 100
             ),
           ),
         ],

@@ -45,7 +45,7 @@ class _PhotosScreenState extends State<PhotosScreen> {
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return PhotoScreen(e.title!, e.id!);
+                  return PhotoScreen(e.title!, e.id!, widget.album_id);
                 }));
               },
               child: CustomAlbum(null, e.path, height! * 0.138, width! * 0.31),
