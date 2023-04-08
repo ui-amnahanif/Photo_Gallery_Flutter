@@ -1,36 +1,72 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:photo_gallery/DBHelper/dbhelper.dart';
-import 'package:photo_gallery/Models/album.dart';
-import 'package:photo_gallery/Screens/albumsOfAlbums.dart';
+import 'package:flutter/src/widgets/container.dart';
+import 'package:flutter/src/widgets/framework.dart';
+import 'package:photo_gallery/Models/photo.dart';
 import 'package:photo_gallery/Screens/photosScreen.dart';
-import 'package:photo_gallery/Utilities/CustomWdigets/customalbum.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
 
-class AlbummsScreen extends StatefulWidget {
+import '../DBHelper/dbhelper.dart';
+import '../Models/album.dart';
+import '../Models/event.dart';
+import '../Models/person.dart';
+import '../Utilities/CustomWdigets/customalbum.dart';
+
+class AlbumsOfAlbumsScreen extends StatefulWidget {
+  String albumTitle;
+  int album_id;
+  AlbumsOfAlbumsScreen(this.albumTitle, this.album_id);
+
   @override
-  State<AlbummsScreen> createState() => _AlbummsScreenState();
+  State<AlbumsOfAlbumsScreen> createState() => _AlbumsOfAlbumsScreenState();
 }
 
-class _AlbummsScreenState extends State<AlbummsScreen>
+class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
     with TickerProviderStateMixin {
-  List<Album> allAlbumslist = [];
+  List<Photo> plist = [];
+  List<Album> alist = [];
   List<Album> peopleAlbumsList = [];
   List<Album> eventAlbumsList = [];
   List<Album> locationAlbumsList = [];
-  List<Album> dateAlbumsList = [];
   List<Album> labelAlbumsList = [];
+  List<Album> dateAlbumsList = [];
+  List<Person> personList = [];
+  List<Event> eventList = [];
+  List<String> labelList = [];
+  List<String> dateList = [];
+  //locationlist
   double? width;
   double? height;
+
   @override
   void initState() {
     getAllAlbums();
   }
 
   void getAllAlbums() async {
-    allAlbumslist = await DbHelper.instance.getAllAlbums();
-    peopleAlbumsList = await DbHelper.instance.getPeopleAlbums();
-    eventAlbumsList = await DbHelper.instance.getEventAlbums();
-    labelAlbumsList = await DbHelper.instance.getLabelAlbums();
+    plist = await DbHelper.instance.getPhotosOfAlbum(widget.album_id);
+    alist = await DbHelper.instance.getAlbumsOfPhotos(plist);
+    personList = await DbHelper.instance.getAllPersons();
+    eventList = await DbHelper.instance.getAllEvents();
+    labelList = await DbHelper.instance.getAllLabels();
+    for (int i = 0; i < alist.length; i++) {
+      personList.forEach((element) {
+        if (element.name == alist[i].title) {
+          peopleAlbumsList.add(alist[i]);
+        }
+      });
+      eventList.forEach((element) {
+        if (element.name == alist[i].title) {
+          eventAlbumsList.add(alist[i]);
+        }
+      });
+      labelList.forEach((element) {
+        if (element == alist[i].title) {
+          labelAlbumsList.add(alist[i]);
+        }
+      });
+      // for location and for date too
+    }
     setState(() {});
   }
 
@@ -41,7 +77,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     TabController _tabController = TabController(length: 5, vsync: this);
     return Scaffold(
       appBar: AppBar(
-        title: Text("Albums"),
+        title: Text(widget.albumTitle),
         backgroundColor: primaryColor,
       ),
       // floatingActionButton: FloatingActionButton(
@@ -81,7 +117,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
             width: width,
             height: height! * 0.71,
             child: TabBarView(controller: _tabController, children: [
-              allAlbums(),
+              dateAlbums(),
               peopleAlbums(),
               eventAlbums(),
               locationAlbums(),
@@ -93,27 +129,27 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     );
   }
 
-  Widget allAlbums() {
-    return Container(
-      padding: EdgeInsets.only(top: 15),
-      child: GridView.count(
-        crossAxisCount: 3,
-        children: [
-          ...allAlbumslist.map(
-            (e) => GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!);
-                }));
-              },
-              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
-                  width! * 0.3), //85 100
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget allAlbums() {
+  //   return Container(
+  //     padding: EdgeInsets.only(top: 15),
+  //     child: GridView.count(
+  //       crossAxisCount: 3,
+  //       children: [
+  //         ...alist.map(
+  //           (e) => GestureDetector(
+  //             onTap: () {
+  //               Navigator.push(context, MaterialPageRoute(builder: (context) {
+  //                 return PhotosScreen(e.title, e.id!, plist);
+  //               }));
+  //             },
+  //             child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
+  //                 width! * 0.3), //85 100
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget peopleAlbums() {
     return Container(
@@ -124,11 +160,8 @@ class _AlbummsScreenState extends State<AlbummsScreen>
           ...peopleAlbumsList.map(
             (e) => GestureDetector(
               onTap: () {
-                // Navigator.push(context, MaterialPageRoute(builder: (context) {
-                //   return PhotosScreen(e.title, e.id!);
-                // }));
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!);
+                  return PhotosScreen(e.title, e.id!, plist);
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
@@ -150,7 +183,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!);
+                  return PhotosScreen(e.title, e.id!, plist);
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
@@ -172,7 +205,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!);
+                  return PhotosScreen(e.title, e.id!, plist);
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
@@ -194,7 +227,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!);
+                  return PhotosScreen(e.title, e.id!, plist);
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
@@ -212,11 +245,11 @@ class _AlbummsScreenState extends State<AlbummsScreen>
       child: GridView.count(
         crossAxisCount: 3,
         children: [
-          ...dateAlbumsList.map(
+          ...locationAlbumsList.map(
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!);
+                  return PhotosScreen(e.title, e.id!, plist);
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,

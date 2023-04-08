@@ -30,6 +30,7 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
   late TextEditingController peopleController = TextEditingController();
   late TextEditingController eventController = TextEditingController();
   late TextEditingController locationController = TextEditingController();
+  late TextEditingController labelController = TextEditingController();
   @override
   void initState() {
     // TODO: implement initState
@@ -40,6 +41,7 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
     photo = await DbHelper.instance.getPhotoById(widget.photo_id);
     plist = await DbHelper.instance.getPersonDetailsByPhotoId(widget.photo_id);
     elist = await DbHelper.instance.getEventDetailsByPhotoId(widget.photo_id);
+    labelController.text = photo.label == null ? "" : photo.label!;
     setState(() {});
   }
 
@@ -199,6 +201,16 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
                         );
                       })
                   : CustomText("no event", 10, null, FontWeight.w400, 0.1),
+              CustomText("Label", 10, null, FontWeight.w500, 0.1),
+              Align(
+                alignment: Alignment(-0.6, 0.0),
+                child: CustomTextFormField(
+                  height! * 0.052,
+                  width! * 0.75,
+                  "",
+                  labelController,
+                ),
+              ),
               CustomText("Location", 10, null, FontWeight.w500, 0.1),
               Align(
                 alignment: Alignment(-0.6, 0.0),
@@ -223,6 +235,7 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
 
   addeditfunction() async {
     //location pe kaam krna hai
+    photo.label = labelController.text != "" ? labelController.text : null;
     await DbHelper.instance.editPhotobyid(photo);
     await DbHelper.instance
         .inserteditPersonAndAlbumbyid(photo, plist, widget.album_id);

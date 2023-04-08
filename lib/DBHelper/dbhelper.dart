@@ -33,6 +33,7 @@ class DbHelper {
                       lat real,
                       lng real,
                       path text,
+                      label text,
                       date_taken text,
                       last_modified_date text
                     )
@@ -162,7 +163,6 @@ class DbHelper {
   }
 
   Future<List<Album>> getPeopleAlbums() async {
-    //not completed
     List<Person> person_list = [];
     List<Album> album_list = [];
     Database db = await instance.database;
@@ -178,8 +178,40 @@ class DbHelper {
     return album_list;
   }
 
+  Future<List<Person>> getAllPersons() async {
+    List<Person> person_list = [];
+    Database db = await instance.database;
+    List<Map<String, dynamic>> data1 = await db.query("Person");
+    for (int i = 0; i < data1.length; i++) {
+      person_list.add(Person.fromMap(data1[i]));
+    }
+    return person_list;
+  }
+
+  Future<List<Event>> getAllEvents() async {
+    List<Event> event_list = [];
+    Database db = await instance.database;
+    List<Map<String, dynamic>> data1 = await db.query("Event");
+    for (int i = 0; i < data1.length; i++) {
+      event_list.add(Event.fromMap(data1[i]));
+    }
+    return event_list;
+  }
+
+  Future<List<String>> getAllLabels() async {
+    List<String> label_list = [];
+    Database db = await instance.database;
+    List<Map<String, dynamic>> data1 =
+        await db.query("Photo", columns: ['label']);
+    for (int i = 0; i < data1.length; i++) {
+      if (data1[i]["label"] != null) {
+        label_list.add(data1[i]["label"].toString());
+      }
+    }
+    return label_list;
+  }
+
   Future<List<Album>> getEventAlbums() async {
-    //not completed
     List<Event> event_list = [];
     List<Album> album_list = [];
     Database db = await instance.database;
@@ -190,6 +222,26 @@ class DbHelper {
     for (int i = 0; i < event_list.length; i++) {
       List<Map<String, dynamic>> data = await db
           .query("Album", where: 'title=?', whereArgs: [event_list[i].name]);
+      album_list.add(Album.fromMap(data[0]));
+    }
+    return album_list;
+  }
+
+  Future<List<Album>> getLabelAlbums() async {
+    //not completed.............................................
+    Database db = await instance.database;
+    List<Map<String, dynamic>> data =
+        await db.query("Photo", columns: ["label"]);
+    List<String> labels = [];
+    for (int i = 0; i < data.length; i++) {
+      if (data[i]["label"] != null) {
+        labels.add(data[i]["label"]);
+      }
+    }
+    List<Album> album_list = [];
+    for (int i = 0; i < labels.length; i++) {
+      List<Map<String, dynamic>> data =
+          await db.query("Album", where: 'title=?', whereArgs: [labels[i]]);
       album_list.add(Album.fromMap(data[0]));
     }
     return album_list;
@@ -212,6 +264,25 @@ class DbHelper {
 
     print("data length ${photo_ids}");
     return photo_list;
+  }
+
+  Future<List<Album>> getAlbumsOfPhotos(List<Photo> plist) async {
+    Database db = await instance.database;
+    List<Album> alist = [];
+    String query;
+    for (int i = 0; i < plist.length; i++) {
+      query =
+          "select * from Album inner join albumphoto on album.id=albumphoto.album_id where albumphoto.photo_id=${plist[i].id}";
+      List<Map<String, dynamic>> data = await db.rawQuery(query);
+      for (int j = 0; j < data.length; j++) {
+        alist.add(Album.fromMap(data[j]));
+      }
+    }
+    //alist = alist.toSet().toList();
+    var seen = Set<String>();
+    List<Album> uniqueAlbumlist =
+        alist.where((album) => seen.add(album.id.toString())).toList();
+    return uniqueAlbumlist;
   }
 
   Future<Photo> getPhotoById(int id) async {
@@ -256,7 +327,28 @@ class DbHelper {
 
   Future<void> editPhotobyid(Photo p) async {
     Database db = await instance.database;
-    db.update("Photo", p.toMap(), where: "id=?", whereArgs: [p.id]);
+    List<Map<String, dynamic>> existingPhoto =
+        await db.query("Photo", where: "id=?", whereArgs: [p.id]);
+    Photo existingPhotoData = Photo.fromMap(existingPhoto[0]);
+    if (p.label != null) {
+      if (existingPhotoData.label == null) {
+        db.update("Photo", p.toMap(), where: "id=?", whereArgs: [p.id]);
+        Album a = Album();
+        a.title = p.label!;
+        a.cover_photo = p.path;
+        int a_id = await db.insert("Album", a.toMap()); //inserting into album
+        var value = {'album_id': a_id, 'photo_id': p.id};
+        db.insert("AlbumPhoto", value);
+      } else {
+        db.update("Photo", p.toMap(), where: "id=?", whereArgs: [p.id]);
+        Album a = Album();
+        a.title = p.label!;
+        db.update("Album", a.toMap(),
+            where: "title=?", whereArgs: [existingPhotoData.label]);
+      }
+    } else {
+      db.update("Photo", p.toMap(), where: "id=?", whereArgs: [p.id]);
+    }
     print("Photo Table updated succesfully");
   }
 

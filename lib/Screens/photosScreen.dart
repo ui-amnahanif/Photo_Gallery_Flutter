@@ -9,7 +9,8 @@ import '../Utilities/CustomWdigets/customalbum.dart';
 class PhotosScreen extends StatefulWidget {
   String albumTitle;
   int album_id;
-  PhotosScreen(this.albumTitle, this.album_id);
+  List<Photo> personlist;
+  PhotosScreen(this.albumTitle, this.album_id, this.personlist);
 
   @override
   State<PhotosScreen> createState() => _PhotosScreenState();
@@ -17,6 +18,7 @@ class PhotosScreen extends StatefulWidget {
 
 class _PhotosScreenState extends State<PhotosScreen> {
   List<Photo> plist = [];
+  List<Photo> photoToDisplaylist = [];
   double? width;
   double? height;
   @override
@@ -26,6 +28,13 @@ class _PhotosScreenState extends State<PhotosScreen> {
 
   getAllPhotos() async {
     plist = await DbHelper.instance.getPhotosOfAlbum(widget.album_id);
+    for (int i = 0; i < widget.personlist.length; i++) {
+      for (int j = 0; j < plist.length; j++) {
+        if (widget.personlist[i].id == plist[j].id) {
+          photoToDisplaylist.add(plist[j]);
+        }
+      }
+    }
     setState(() {});
   }
 
@@ -41,7 +50,7 @@ class _PhotosScreenState extends State<PhotosScreen> {
         padding: EdgeInsets.only(top: height! * 0.020),
         crossAxisCount: 3,
         children: [
-          ...plist.map(
+          ...photoToDisplaylist.map(
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
