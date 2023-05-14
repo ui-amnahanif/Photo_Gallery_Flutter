@@ -1,10 +1,8 @@
-import 'dart:ffi';
-
 class Photo {
   int? id;
   String? title;
-  Float? lat;
-  Float? lng;
+  double? lat;
+  double? lng;
   String path = "";
   String? label;
   String? date_taken;

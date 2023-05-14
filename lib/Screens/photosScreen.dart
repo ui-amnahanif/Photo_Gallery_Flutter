@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:photo_gallery/Models/album.dart';
 import 'package:photo_gallery/Screens/photoScreen.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
 import '../DBHelper/dbhelper.dart';
@@ -9,8 +8,8 @@ import '../Utilities/CustomWdigets/customalbum.dart';
 class PhotosScreen extends StatefulWidget {
   String albumTitle;
   int album_id;
-  List<Photo> personlist;
-  PhotosScreen(this.albumTitle, this.album_id, this.personlist);
+  List<Photo> photolist;
+  PhotosScreen(this.albumTitle, this.album_id, this.photolist);
 
   @override
   State<PhotosScreen> createState() => _PhotosScreenState();
@@ -27,10 +26,11 @@ class _PhotosScreenState extends State<PhotosScreen> {
   }
 
   getAllPhotos() async {
-    plist = await DbHelper.instance.getPhotosOfAlbum(widget.album_id);
-    for (int i = 0; i < widget.personlist.length; i++) {
+    plist = await DbHelper.instance
+        .getPhotosOfAlbum(widget.album_id, widget.albumTitle);
+    for (int i = 0; i < widget.photolist.length; i++) {
       for (int j = 0; j < plist.length; j++) {
-        if (widget.personlist[i].id == plist[j].id) {
+        if (widget.photolist[i].id == plist[j].id) {
           photoToDisplaylist.add(plist[j]);
         }
       }

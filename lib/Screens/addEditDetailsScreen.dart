@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:photo_gallery/Models/event.dart';
 import 'package:photo_gallery/Models/person.dart';
 import 'package:photo_gallery/Models/photo.dart';
+import 'package:photo_gallery/Screens/fullMapScreen.dart';
 import 'package:photo_gallery/Utilities/CustomWdigets/custombutton.dart';
 import 'package:photo_gallery/Utilities/CustomWdigets/customtext.dart';
 import 'package:photo_gallery/Utilities/CustomWdigets/customtextformfield.dart';
@@ -13,7 +17,10 @@ class AddEditDetailsScreen extends StatefulWidget {
   int photo_id;
   int album_id;
   AddEditDetailsScreen(this.photo_id, this.album_id);
-
+  static const CameraPosition _kGooglePlex = CameraPosition(
+    target: LatLng(33.6412, 73.0635),
+    zoom: 14.4746,
+  );
   @override
   State<AddEditDetailsScreen> createState() => _AddEditDetailsScreenState();
 }
@@ -31,10 +38,75 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
   late TextEditingController eventController = TextEditingController();
   late TextEditingController locationController = TextEditingController();
   late TextEditingController labelController = TextEditingController();
+  final Completer<GoogleMapController> _controller =
+      Completer<GoogleMapController>();
+
+  List<Marker> markers = [];
+  Marker myMarker = Marker(
+      markerId: MarkerId('1'),
+      position: LatLng(33.6412, 73.0635),
+      infoWindow: InfoWindow(title: "my position"));
+
   @override
   void initState() {
     // TODO: implement initState
     getPeopleEventDetails();
+  }
+
+  getCurrentLatLng() {
+    getCurrentLocation().then((value) async {
+      myMarker = Marker(
+          markerId: MarkerId('1'),
+          position: LatLng(value.latitude, value.longitude),
+          infoWindow: InfoWindow(title: "current position"));
+      markers.add(myMarker);
+      CameraPosition cameraPosition = CameraPosition(
+        target: LatLng(value.latitude, value.longitude),
+        zoom: 14.4746,
+      );
+      final GoogleMapController controller = await _controller.future;
+      controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+      setState(() {});
+    });
+  }
+
+  getPhotoLatLng() async {
+    myMarker = Marker(
+        markerId: MarkerId('1'),
+        position: LatLng(photo.lat!, photo.lng!),
+        infoWindow: InfoWindow(title: "current position"));
+    markers.add(myMarker);
+    CameraPosition cameraPosition = CameraPosition(
+      target: LatLng(photo.lat!, photo.lng!),
+      zoom: 14.4746,
+    );
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+    setState(() {});
+  }
+
+  Future<Position> getCurrentLocation() async {
+    // bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    // if (!serviceEnabled) {
+    //   return Future.error("location service is disabled");
+    // }
+    // LocationPermission permission = await Geolocator.checkPermission();
+    // if (permission == LocationPermission.denied) {
+    //   permission = await Geolocator.requestPermission();
+    //   if (permission == LocationPermission.denied) {
+    //     return Future.error("location permissions are denied");
+    //   }
+    // }
+    // if (permission == LocationPermission.deniedForever) {
+    //   return Future.error("location permissions are permanently denied");
+    // }
+    // return Geolocator.getCurrentPosition();
+    await Geolocator.requestPermission()
+        .then((value) {})
+        .onError((error, stackTrace) {
+      print("Error" + error.toString());
+    });
+    return Geolocator.getCurrentPosition();
   }
 
   getPeopleEventDetails() async {
@@ -42,6 +114,12 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
     plist = await DbHelper.instance.getPersonDetailsByPhotoId(widget.photo_id);
     elist = await DbHelper.instance.getEventDetailsByPhotoId(widget.photo_id);
     labelController.text = photo.label == null ? "" : photo.label!;
+    if (photo.lat == null) {
+      getCurrentLatLng();
+    } else {
+      getPhotoLatLng();
+    }
+    markers.add(myMarker);
     setState(() {});
   }
 
@@ -52,7 +130,7 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        title: Text("Add/Edit Details"),
+        title: Text("Add Details"),
         backgroundColor: primaryColor,
       ),
       body: SingleChildScrollView(
@@ -206,25 +284,65 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
                 alignment: Alignment(-0.6, 0.0),
                 child: CustomTextFormField(
                   height! * 0.052,
-                  width! * 0.75,
+                  width! * 0.90,
                   "",
                   labelController,
                 ),
               ),
               CustomText("Location", 10, null, FontWeight.w500, 0.1),
-              Align(
-                alignment: Alignment(-0.6, 0.0),
-                child: CustomTextFormField(
-                  height! * 0.052,
-                  width! * 0.75,
-                  "",
-                  locationController,
-                ),
-              ),
+              // Align(
+              //   alignment: Alignment(-0.6, 0.0),
+              //   child: CustomTextFormField(
+              //     height! * 0.052,
+              //     width! * 0.75,
+              //     "",
+              //     locationController,
+              //   ),
+              // ),
               SizedBox(
-                height: 30,
+                height: 10,
               ),
-              CustomButton("Add/Edit", 30, 150, primaryColor, primaryColor,
+              photo.lat != null
+                  ? Container(
+                      height: 200,
+                      child: GoogleMap(
+                        mapType: MapType.normal,
+                        onTap: (latlng) async {
+                          // myMarker = Marker(
+                          //     markerId: MarkerId('1'),
+                          //     position: LatLng(latlng.latitude, latlng.longitude),
+                          //     infoWindow: InfoWindow(title: "my position"));
+                          // setState(() {
+                          //   markers.add(myMarker);
+                          // });
+                          Photo? result = await Navigator.push(context,
+                              MaterialPageRoute(builder: (context) {
+                            return FullMapScreen(photo);
+                          }));
+                          photo = result == null ? photo : result;
+                          setState(() {});
+                        },
+                        markers: markers.toSet(),
+                        initialCameraPosition:
+                            AddEditDetailsScreen._kGooglePlex,
+                        onMapCreated: (GoogleMapController controller) {
+                          _controller.complete(controller);
+                        },
+                      ),
+                    )
+                  : CustomButton("Add Location", 30, 150, primaryColor,
+                      primaryColor, Colors.white, () async {
+                      Photo? result = await Navigator.push(context,
+                          MaterialPageRoute(builder: (context) {
+                        return FullMapScreen(photo);
+                      }));
+                      photo = result == null ? photo : result;
+                      setState(() {});
+                    }),
+              SizedBox(
+                height: 20,
+              ),
+              CustomButton("Add", 30, 150, primaryColor, primaryColor,
                   Colors.white, addeditfunction)
             ],
           ),

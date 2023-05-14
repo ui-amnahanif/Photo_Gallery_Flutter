@@ -1,7 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:photo_gallery/Models/photo.dart';
 import 'package:photo_gallery/Screens/photosScreen.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
@@ -33,7 +30,6 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
   List<Person> personList = [];
   List<Event> eventList = [];
   List<String> labelList = [];
-  List<String> dateList = [];
   //locationlist
   double? width;
   double? height;
@@ -44,7 +40,8 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
   }
 
   void getAllAlbums() async {
-    plist = await DbHelper.instance.getPhotosOfAlbum(widget.album_id);
+    plist = await DbHelper.instance
+        .getPhotosOfAlbum(widget.album_id, widget.albumTitle);
     alist = await DbHelper.instance.getAlbumsOfPhotos(plist);
     personList = await DbHelper.instance.getAllPersons();
     eventList = await DbHelper.instance.getAllEvents();
@@ -67,7 +64,55 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
       });
       // for location and for date too
     }
+    dateAlbumsList = getDatesAlbums();
     setState(() {});
+  }
+
+  List<Album> getDatesAlbums() {
+    List<Album> datesAlbumlist = [];
+    List<String> distinctDates = [];
+    Album a;
+    late DateTime dateTime;
+    for (var photo in plist) {
+      String date =
+          photo.date_taken!.replaceFirst(':', '-').replaceFirst(':', '-');
+      ;
+      dateTime = DateTime.parse(date);
+      String dateFormatted =
+          "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}";
+      if (!distinctDates.contains(dateFormatted)) {
+        distinctDates.add(dateFormatted);
+      }
+    }
+    for (int i = 0; i < distinctDates.length; i++) {
+      a = Album();
+      a.id = int.parse(distinctDates[i].replaceAll("-", ""));
+      a.title = distinctDates[i];
+      Photo photoOfDate = plist.firstWhere(
+        (photo) =>
+            DateTime.parse(photo.date_taken!
+                        .replaceFirst(':', '-')
+                        .replaceFirst(':', '-'))
+                    .year ==
+                DateTime.parse(distinctDates[i]).year &&
+            DateTime.parse(photo.date_taken!
+                        .replaceFirst(':', '-')
+                        .replaceFirst(':', '-'))
+                    .month ==
+                DateTime.parse(distinctDates[i]).month &&
+            DateTime.parse(photo.date_taken!
+                        .replaceFirst(':', '-')
+                        .replaceFirst(':', '-'))
+                    .day ==
+                DateTime.parse(distinctDates[i]).day,
+      );
+      if (photoOfDate != null) {
+        a.cover_photo = photoOfDate.path;
+      }
+      datesAlbumlist.add(a);
+    }
+
+    return datesAlbumlist;
   }
 
   @override
@@ -164,7 +209,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                   return PhotosScreen(e.title, e.id!, plist);
                 }));
               },
-              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
             ),
           ),
@@ -186,7 +231,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                   return PhotosScreen(e.title, e.id!, plist);
                 }));
               },
-              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
             ),
           ),
@@ -208,7 +253,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                   return PhotosScreen(e.title, e.id!, plist);
                 }));
               },
-              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
             ),
           ),
@@ -230,7 +275,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                   return PhotosScreen(e.title, e.id!, plist);
                 }));
               },
-              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
             ),
           ),
@@ -245,14 +290,14 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
       child: GridView.count(
         crossAxisCount: 3,
         children: [
-          ...locationAlbumsList.map(
+          ...dateAlbumsList.map(
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
                   return PhotosScreen(e.title, e.id!, plist);
                 }));
               },
-              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
             ),
           ),

@@ -1,7 +1,7 @@
 class Album {
   int? id;
   late String title;
-  late String cover_photo;
+  String? cover_photo;
   Album();
 
   Map<String, dynamic> toMap() {

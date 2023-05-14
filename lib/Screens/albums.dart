@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:photo_gallery/DBHelper/dbhelper.dart';
 import 'package:photo_gallery/Models/album.dart';
 import 'package:photo_gallery/Screens/albumsOfAlbums.dart';
-import 'package:photo_gallery/Screens/photosScreen.dart';
 import 'package:photo_gallery/Utilities/CustomWdigets/customalbum.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
 
@@ -21,6 +20,8 @@ class _AlbummsScreenState extends State<AlbummsScreen>
   List<Album> labelAlbumsList = [];
   double? width;
   double? height;
+  double initialScale = 1.0;
+  double scaleFactor = 1.0;
   @override
   void initState() {
     getAllAlbums();
@@ -31,6 +32,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     peopleAlbumsList = await DbHelper.instance.getPeopleAlbums();
     eventAlbumsList = await DbHelper.instance.getEventAlbums();
     labelAlbumsList = await DbHelper.instance.getLabelAlbums();
+    dateAlbumsList = await DbHelper.instance.getDateAlbums();
     setState(() {});
   }
 
@@ -80,62 +82,218 @@ class _AlbummsScreenState extends State<AlbummsScreen>
           Container(
             width: width,
             height: height! * 0.71,
-            child: TabBarView(controller: _tabController, children: [
-              allAlbums(),
-              peopleAlbums(),
-              eventAlbums(),
-              locationAlbums(),
-              labelAlbums(),
-            ]),
+            child: TabBarView(
+                // physics: const NeverScrollableScrollPhysics(),
+                controller: _tabController,
+                children: [
+                  dateAlbums(),
+                  peopleAlbums(),
+                  eventAlbums(),
+                  locationAlbums(),
+                  labelAlbums(),
+                ]),
           ),
         ],
       ),
     );
   }
 
+  // Widget allAlbums() {
+  //   return GestureDetector(
+  //     onScaleStart: (details) {
+  //       scaleFactor = initialScale;
+  //     },
+  //     onScaleUpdate: (details) {
+  //       setState(() {
+  //         scaleFactor = initialScale = details.scale;
+  //         print("Scale = " + details.scale.toString());
+  //       });
+  //     },
+  //     child: Container(
+  //       padding: EdgeInsets.only(top: 15),
+  //       child: GridView.count(
+  //         // physics: const NeverScrollableScrollPhysics(),
+  //         crossAxisCount: scaleFactor == 1.0
+  //             ? 3
+  //             : double.parse(scaleFactor.toStringAsFixed(1)) > 1.0 &&
+  //                     double.parse(scaleFactor.toStringAsFixed(1)) < 1.5
+  //                 ? 2
+  //                 : double.parse(scaleFactor.toStringAsFixed(1)) > 1.5 &&
+  //                         double.parse(scaleFactor.toStringAsFixed(1)) < 2.0
+  //                     ? 1
+  //                     : 3,
+  //         children: [
+  //           ...allAlbumslist.map(
+  //             (e) => GestureDetector(
+  //               onTap: () {
+  //                 Navigator.push(context, MaterialPageRoute(builder: (context) {
+  //                   return AlbumsOfAlbumsScreen(e.title, e.id!);
+  //                   //return PhotosScreen(e.title, e.id!, personlist)
+  //                 }));
+  //               },
+  //               child: CustomAlbum(
+  //                   e.title,
+  //                   e.cover_photo,
+  //                   scaleFactor == 1.0
+  //                       ? height! * 0.11
+  //                       : double.parse(scaleFactor.toStringAsFixed(1)) > 1.0 &&
+  //                               double.parse(scaleFactor.toStringAsFixed(1)) <
+  //                                   1.5
+  //                           ? height! * 0.18
+  //                           : double.parse(scaleFactor.toStringAsFixed(1)) >
+  //                                       1.5 &&
+  //                                   double.parse(
+  //                                           scaleFactor.toStringAsFixed(1)) <
+  //                                       2.0
+  //                               ? height! * 0.40
+  //                               : height! * 0.11,
+  //                   scaleFactor == 1.0
+  //                       ? width! * 0.3
+  //                       : double.parse(scaleFactor.toStringAsFixed(1)) > 1.0 &&
+  //                               double.parse(scaleFactor.toStringAsFixed(1)) <
+  //                                   1.5
+  //                           ? width! * 0.45
+  //                           : double.parse(scaleFactor.toStringAsFixed(1)) >
+  //                                       1.5 &&
+  //                                   double.parse(
+  //                                           scaleFactor.toStringAsFixed(1)) <
+  //                                       2.0
+  //                               ? width! * 0.85
+  //                               : width! * 0.3), //85 100
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
   Widget allAlbums() {
-    return Container(
-      padding: EdgeInsets.only(top: 15),
-      child: GridView.count(
-        crossAxisCount: 3,
-        children: [
-          ...allAlbumslist.map(
-            (e) => GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!);
-                }));
-              },
-              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
-                  width! * 0.3), //85 100
+    return InteractiveViewer(
+      scaleEnabled: false,
+      // onInteractionStart: (details) {
+      //   scaleFactor = initialScale;
+      // },
+      maxScale: 2.0,
+      onInteractionUpdate: (details) {
+        setState(() {
+          // print("pointer count : " + details.pointerCount.toString());
+          scaleFactor = initialScale = details.scale;
+          print("Scale = " + details.scale.toString());
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.only(top: 15),
+        child: GridView.count(
+          // physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: scaleFactor == 1.0
+              ? 3
+              : double.parse(scaleFactor.toStringAsFixed(1)) > 1.0 &&
+                      double.parse(scaleFactor.toStringAsFixed(1)) < 1.5
+                  ? 2
+                  : double.parse(scaleFactor.toStringAsFixed(1)) > 1.5 &&
+                          double.parse(scaleFactor.toStringAsFixed(1)) < 2.0
+                      ? 1
+                      : double.parse(scaleFactor.toStringAsFixed(1)) < 1.0 &&
+                              double.parse(scaleFactor.toStringAsFixed(1)) > 0.5
+                          ? 4
+                          : double.parse(scaleFactor.toStringAsFixed(1)) <=
+                                      0.5 &&
+                                  double.parse(scaleFactor.toStringAsFixed(1)) >
+                                      0.0
+                              ? 5
+                              : 3,
+          children: [
+            ...allAlbumslist.map(
+              (e) => GestureDetector(
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return AlbumsOfAlbumsScreen(e.title, e.id!);
+                    //return PhotosScreen(e.title, e.id!, personlist)
+                  }));
+                },
+                child: CustomAlbum(
+                    e.title,
+                    e.cover_photo!,
+                    scaleFactor == 1.0
+                        ? height! * 0.11
+                        : double.parse(scaleFactor.toStringAsFixed(1)) > 1.0 &&
+                                double.parse(scaleFactor.toStringAsFixed(1)) <
+                                    1.5
+                            ? height! * 0.18
+                            : double.parse(scaleFactor.toStringAsFixed(1)) > 1.5 &&
+                                    double.parse(scaleFactor.toStringAsFixed(1)) <
+                                        2.0
+                                ? height! * 0.40
+                                : double.parse(scaleFactor.toStringAsFixed(1)) <= 0.5 &&
+                                        double.parse(scaleFactor.toStringAsFixed(1)) >
+                                            0.0
+                                    ? height! * 0.08
+                                    : double.parse(scaleFactor.toStringAsFixed(1)) < 1.0 &&
+                                            double.parse(scaleFactor.toStringAsFixed(1)) >
+                                                0.5
+                                        ? height! * 0.1
+                                        : height! * 0.11,
+                    scaleFactor == 1.0
+                        ? width! * 0.3
+                        : double.parse(scaleFactor.toStringAsFixed(1)) > 1.0 &&
+                                double.parse(scaleFactor.toStringAsFixed(1)) <
+                                    1.5
+                            ? width! * 0.45
+                            : double.parse(scaleFactor.toStringAsFixed(1)) > 1.5 &&
+                                    double.parse(scaleFactor.toStringAsFixed(1)) <
+                                        2.0
+                                ? width! * 0.85
+                                : double.parse(scaleFactor.toStringAsFixed(1)) <=
+                                            0.5 &&
+                                        double.parse(scaleFactor.toStringAsFixed(1)) >
+                                            0.0
+                                    ? width! * 0.175
+                                    : double.parse(scaleFactor.toStringAsFixed(1)) <
+                                                1.0 &&
+                                            double.parse(scaleFactor.toStringAsFixed(1)) > 0.5
+                                        ? width! * 0.22
+                                        : width! * 0.3),
+                //85 100
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget peopleAlbums() {
-    return Container(
-      padding: EdgeInsets.only(top: 15),
-      child: GridView.count(
-        crossAxisCount: 3,
-        children: [
-          ...peopleAlbumsList.map(
-            (e) => GestureDetector(
-              onTap: () {
-                // Navigator.push(context, MaterialPageRoute(builder: (context) {
-                //   return PhotosScreen(e.title, e.id!);
-                // }));
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!);
-                }));
-              },
-              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
-                  width! * 0.3), //85 100
+    return GestureDetector(
+      onScaleStart: (details) {
+        scaleFactor = initialScale;
+      },
+      onScaleUpdate: (details) {
+        setState(() {
+          scaleFactor = initialScale = details.scale;
+          print("Scale = " + details.scale.toString());
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.only(top: 15),
+        child: GridView.count(
+          crossAxisCount: scaleFactor == 1.0 ? 3 : 2,
+          children: [
+            ...peopleAlbumsList.map(
+              (e) => GestureDetector(
+                onTap: () {
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  //   return PhotosScreen(e.title, e.id!);
+                  // }));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return AlbumsOfAlbumsScreen(e.title, e.id!);
+                  }));
+                },
+                child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
+                    width! * 0.3), //85 100
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -153,7 +311,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                   return AlbumsOfAlbumsScreen(e.title, e.id!);
                 }));
               },
-              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
             ),
           ),
@@ -175,7 +333,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                   return AlbumsOfAlbumsScreen(e.title, e.id!);
                 }));
               },
-              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
             ),
           ),
@@ -197,7 +355,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                   return AlbumsOfAlbumsScreen(e.title, e.id!);
                 }));
               },
-              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
             ),
           ),
@@ -219,7 +377,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                   return AlbumsOfAlbumsScreen(e.title, e.id!);
                 }));
               },
-              child: CustomAlbum(e.title, e.cover_photo, height! * 0.11,
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
             ),
           ),
