@@ -123,7 +123,6 @@
 //     );
 //   }
 // }
-import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:photo_gallery/DBHelper/dbhelper.dart';
@@ -143,11 +142,11 @@ class _SearchScreenState extends State<SearchScreen> {
   DateTime selectedDate = DateTime.now();
   double? height;
   double? width;
-  String rdPeople = "peopleIncluded";
-  String rdEvent = "eventIncluded";
-  String rdLabel = "labelIncluded";
-  String rdDate = "dateIncluded";
-  String rdLocation = "locationIncluded";
+  String rdPeople = "";
+  String rdEvent = "";
+  String rdLabel = "";
+  String rdDate = "";
+  String rdLocation = "";
   List<Person> plist = [];
   List<Event> elist = [];
   List<String> llist = [];

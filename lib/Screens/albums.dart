@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:photo_gallery/DBHelper/dbhelper.dart';
 import 'package:photo_gallery/Models/album.dart';
 import 'package:photo_gallery/Screens/albumsOfAlbums.dart';
@@ -33,8 +35,12 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     eventAlbumsList = await DbHelper.instance.getEventAlbums();
     labelAlbumsList = await DbHelper.instance.getLabelAlbums();
     dateAlbumsList = await DbHelper.instance.getDateAlbums();
+    locationAlbumsList = await DbHelper.instance.getLocationAlbums();
     setState(() {});
   }
+
+  late File _image;
+  final picker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
@@ -46,12 +52,60 @@ class _AlbummsScreenState extends State<AlbummsScreen>
         title: Text("Albums"),
         backgroundColor: primaryColor,
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {},
-      //   child: Icon(Icons.camera_alt),
-      //   elevation: 18,
-      //   backgroundColor: primaryColor,
-      // ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (BuildContext context) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  ListTile(
+                    leading: const Icon(Icons.camera_alt,
+                        color: Color.fromRGBO(181, 97, 251, 1.0)),
+                    title: const Text('Take photo'),
+                    onTap: () async {
+                      final pickedFile = await picker.pickImage(
+                        source: ImageSource.camera,
+                      );
+
+                      if (pickedFile != null) {
+                        setState(() {
+                          _image = File(pickedFile.path);
+                        });
+                      }
+
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.photo,
+                      color: Color.fromRGBO(181, 97, 251, 1.0),
+                    ),
+                    title: const Text('Choose from Gallery'),
+                    onTap: () async {
+                      final pickedFile = await picker.pickImage(
+                        source: ImageSource.gallery,
+                      );
+
+                      if (pickedFile != null) {
+                        setState(() {
+                          _image = File(pickedFile.path);
+                        });
+                      }
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: Icon(Icons.camera_alt),
+        elevation: 18,
+        backgroundColor: primaryColor,
+      ),
       body: Column(
         children: [
           Container(

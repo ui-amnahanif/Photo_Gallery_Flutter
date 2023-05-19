@@ -1,3 +1,4 @@
+import 'package:geocoding/geocoding.dart';
 import 'package:sqflite/sqflite.dart';
 import '../Models/album.dart';
 import '../Models/event.dart';
@@ -284,8 +285,40 @@ class DbHelper {
     return album_list;
   }
 
+  Future<List<Album>> getLocationAlbums() async {
+    List<Album> album_list = [];
+    Album a;
+    List<String> places = [];
+    List<Photo> plist = await getAllPhotoHavingLatLng();
+    List<Photo> photoforpathList = [];
+    // plist.forEach((element) async {
+    //   String p = await getCityFromLatLong(element.lat!, element.lng!);
+    //   places.add(p);
+    // });
+    for (int i = 0; i < plist.length; i++) {
+      String p = await getCityFromLatLong(plist[i].lat!, plist[i].lng!);
+      if (!places.contains(p)) {
+        places.add(p); //do mot add repeated places
+        photoforpathList.add(plist[i]);
+      }
+    }
+    // // Remove repeated elements from the list.
+    // Set<String> newList = Set.from(places);
+    // // Convert the set to a list.
+    // List<String> uniquePlacesList = newList.toList();
+    for (int i = 0; i < photoforpathList.length; i++) {
+      a = Album();
+      a.id = 0 - (i + 1);
+      a.title = places[i];
+      a.cover_photo = photoforpathList[i].path;
+      album_list.add(a);
+    }
+    return album_list;
+  }
+
   Future<List<Photo>> getPhotosOfAlbum(int id, String title) async {
     Database db = await instance.database;
+
     List<Map<String, dynamic>> data =
         await db.query("AlbumPhoto", where: "album_id=?", whereArgs: [id]);
     List<int> photo_ids = [];
@@ -301,7 +334,7 @@ class DbHelper {
         photo_list.add(Photo.fromMap(data[0]));
       }
       print("data length ${photo_ids}");
-    } else {
+    } else if (title.contains("-")) {
       // String escaped_date_str = title.replaceAll(':', r'\\:');
       String query =
           "SELECT * FROM photo where SUBSTR(date_taken, 1, 10) = '${title.replaceAll("-", ":")}' ;";
@@ -310,8 +343,15 @@ class DbHelper {
       for (int i = 0; i < data.length; i++) {
         photo_list.add(Photo.fromMap(data[i]));
       }
+    } else {
+      List<Photo> plist = await getAllPhotoHavingLatLng();
+      for (int i = 0; i < plist.length; i++) {
+        String p = await getCityFromLatLong(plist[i].lat!, plist[i].lng!);
+        if (p == title) {
+          photo_list.add(plist[i]);
+        }
+      }
     }
-
     return photo_list;
   }
 
@@ -540,6 +580,26 @@ class DbHelper {
     if (isAlbuminserted) {
       await db.delete('AlbumPhoto',
           where: 'album_id = ? AND photo_id=?', whereArgs: [1, photo.id]);
+    }
+  }
+
+  Future<List<Photo>> getAllPhotoHavingLatLng() async {
+    Database db = await instance.database;
+    List<Photo> plist = [];
+    String query = "SELECT * FROM Photo WHERE lat IS NOT NULL;";
+    List<Map<String, dynamic>> data = await db.rawQuery(query);
+    for (int i = 0; i < data.length; i++) {
+      plist.add(Photo.fromMap(data[i]));
+    }
+    return plist;
+  }
+
+  Future<String> getCityFromLatLong(double lat, double lon) async {
+    List<Placemark> placemarks = await placemarkFromCoordinates(lat, lon);
+    if (placemarks != null && placemarks.isNotEmpty) {
+      return placemarks[0].locality!;
+    } else {
+      return "incorrect coordinates";
     }
   }
 }

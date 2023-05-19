@@ -32,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Widget> screens = [
     AlbummsScreen(),
     SearchScreen(),
-    CameraScreen(),
+    //CameraScreen(),
     MapViewScreen(),
     SyncScreen()
   ];
@@ -48,11 +48,11 @@ class _HomeScreenState extends State<HomeScreen> {
       title: Text('Search'),
       activeColor: primaryColor,
     ),
-    BottomNavyBarItem(
-      icon: Icon(Icons.camera_alt),
-      title: Text('Camera'),
-      activeColor: primaryColor,
-    ),
+    // BottomNavyBarItem(
+    //   icon: Icon(Icons.camera_alt),
+    //   title: Text('Camera'),
+    //   activeColor: primaryColor,
+    // ),
     BottomNavyBarItem(
       icon: Icon(Icons.map_outlined),
       title: Text('MapView'),
