@@ -1,3 +1,5 @@
+import '../DBHelper/dbhelper.dart';
+
 class Event {
   int? id;
   late String name;
@@ -12,5 +14,50 @@ class Event {
   Event.fromMap(Map<String, dynamic> e) {
     id = e["id"];
     name = e["name"];
+  }
+  static void insertEvents(List<Event> events, int photoId) async {
+    //get all event from db
+    List<Event> elist = await DbHelper.instance.getAllEvents();
+    bool isEventPresent = false;
+    int presentEventId = -1;
+    //loop through every event
+    for (int i = 0; i < events.length; i++) {
+      //loop through every event that are in db
+      for (int j = 0; j < elist.length; j++) {
+        if (events[i].name == elist[j].name) {
+          isEventPresent = true;
+          presentEventId = elist[j].id!;
+        }
+      }
+      //if event is not present in db
+      if (!isEventPresent) {
+        //insert into event table
+        int eventId = await DbHelper.instance.insertEvent(events[i]);
+        //insert into photoEvent table
+        int id = await DbHelper.instance.insertPhotoEvent(eventId, photoId);
+        print("New event added");
+      } else {
+        //else insert into photoEvent
+        int id =
+            await DbHelper.instance.insertPhotoEvent(presentEventId, photoId);
+        print("Event already present");
+      }
+    }
+  }
+
+  static void updateEvents(List<Event> elist) {
+    for (int i = 0; i < elist.length; i++) {
+      DbHelper.instance.UpdateEvent(elist[i]);
+    }
+  }
+
+  static Future<void> deleteEvent(int eventId, int photoId) async {
+    int affectedRows =
+        await DbHelper.instance.deletePhotoEvent(eventId, photoId);
+    int photoEventCount =
+        await DbHelper.instance.getPhotoEventCountbyEventId(eventId);
+    if (photoEventCount == 0) {
+      int affectedRows = await DbHelper.instance.deleteEventbyId(eventId);
+    }
   }
 }

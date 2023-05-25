@@ -1,11 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:native_exif/native_exif.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_gallery/DBHelper/dbhelper.dart';
 import 'package:photo_gallery/Models/album.dart';
+import 'package:photo_gallery/Models/person.dart';
+import 'package:photo_gallery/Models/photo.dart';
 import 'package:photo_gallery/Screens/albumsOfAlbums.dart';
 import 'package:photo_gallery/Utilities/CustomWdigets/customalbum.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
+import 'package:path/path.dart' as path;
 
 class AlbummsScreen extends StatefulWidget {
   @override
@@ -30,12 +36,18 @@ class _AlbummsScreenState extends State<AlbummsScreen>
   }
 
   void getAllAlbums() async {
-    allAlbumslist = await DbHelper.instance.getAllAlbums();
-    peopleAlbumsList = await DbHelper.instance.getPeopleAlbums();
-    eventAlbumsList = await DbHelper.instance.getEventAlbums();
-    labelAlbumsList = await DbHelper.instance.getLabelAlbums();
-    dateAlbumsList = await DbHelper.instance.getDateAlbums();
-    locationAlbumsList = await DbHelper.instance.getLocationAlbums();
+    // allAlbumslist = await DbHelper.instance.getAllAlbums();
+    // peopleAlbumsList = await DbHelper.instance.getPeopleAlbums();
+    // eventAlbumsList = await DbHelper.instance.getEventAlbums();
+    // labelAlbumsList = await DbHelper.instance.getLabelAlbums();
+    // dateAlbumsList = await DbHelper.instance.getDateAlbums();
+    // locationAlbumsList = await DbHelper.instance.getLocationAlbums();
+    // setState(() {});
+    peopleAlbumsList = await Album.getAllPersonsAlbums();
+    eventAlbumsList = await Album.getAllEventsAlbums();
+    labelAlbumsList = await Album.getAllLabelAlbums();
+    dateAlbumsList = await Album.getAllDatesAlbums();
+    locationAlbumsList = await Album.getAllLocationAlbums();
     setState(() {});
   }
 
@@ -65,14 +77,38 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                         color: Color.fromRGBO(181, 97, 251, 1.0)),
                     title: const Text('Take photo'),
                     onTap: () async {
-                      final pickedFile = await picker.pickImage(
-                        source: ImageSource.camera,
-                      );
+                      final status = await Permission.storage.request();
+                      if (await Permission.storage.isGranted) {
+                        final pickedFile = await picker.pickImage(
+                          source: ImageSource.camera,
+                        );
 
-                      if (pickedFile != null) {
-                        setState(() {
+                        if (pickedFile != null) {
+                          // Get a reference to the directory where images are stored.
+                          final Directory? appDir =
+                              await getExternalStorageDirectory();
+                          final String imagesDir =
+                              path.join(appDir!.path, 'images');
+                          if (!await Directory(imagesDir).exists()) {
+                            Directory(imagesDir).create(recursive: true);
+                          }
+                          // Directory dir = await Directory(imagesDir)
+                          //     .create(recursive: true);
+
+                          // Copy the image file to the app's directory.
+                          final String fileName =
+                              path.basename(pickedFile.path);
+
+                          final String filePath =
+                              path.join(imagesDir, fileName);
+                          print(fileName);
+                          print(filePath);
+                          await File(pickedFile.path).copy(filePath);
+                          await getImageLatLngDatePeople(
+                              filePath, File(filePath), fileName);
                           _image = File(pickedFile.path);
-                        });
+                          setState(() {});
+                        }
                       }
 
                       Navigator.pop(context);
@@ -90,9 +126,10 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                       );
 
                       if (pickedFile != null) {
-                        setState(() {
-                          _image = File(pickedFile.path);
-                        });
+                        await getImageLatLngDatePeople(pickedFile.path,
+                            File(pickedFile.path), pickedFile.name);
+                        _image = File(pickedFile.path);
+                        setState(() {});
                       }
                       Navigator.pop(context);
                     },
@@ -150,6 +187,44 @@ class _AlbummsScreenState extends State<AlbummsScreen>
         ],
       ),
     );
+  }
+
+  Future<void> getImageLatLngDatePeople(
+      String ImagePath, File image, String title) async {
+    Photo p = Photo();
+    List<Person> plist = [];
+    p.path = ImagePath;
+    p.title = title;
+    List<String> people = [];
+    final exif = await Exif.fromPath(ImagePath);
+    final data = await exif.getAttributes() ?? {};
+    if (!data.isEmpty) {
+      if (data.containsKey("DateTimeOriginal")) {
+        p.date_taken = data["DateTimeOriginal"].toString();
+      }
+      if (data.containsKey("GPSLatitude")) {
+        p.lat = double.parse(data["GPSLatitude"].toString());
+      }
+      if (data.containsKey("GPSLongitude")) {
+        p.lng = double.parse(data["GPSLongitude"].toString());
+      }
+    }
+    people = await Photo.saveImage(image);
+    Person per;
+    for (int i = 0; i < people.length; i++) {
+      //adding people name in person list
+      per = Person();
+      per.name = people[i];
+      plist.add(per);
+    }
+    //  int id=  await DbHelper.instance.insertPhoto(p);
+    //   Photo lastInsertedPhoto = await DbHelper.instance.getLastInsertedPhoto();
+    //   await DbHelper.instance
+    //       .inserteditPersonAndAlbumbyid(lastInsertedPhoto, plist);
+
+    int photoId = await DbHelper.instance.insertPhoto(p);
+    Person.insertPersons(plist, photoId);
+    getAllAlbums();
   }
 
   // Widget allAlbums() {
@@ -221,100 +296,100 @@ class _AlbummsScreenState extends State<AlbummsScreen>
   //     ),
   //   );
   // }
-  Widget allAlbums() {
-    return InteractiveViewer(
-      scaleEnabled: false,
-      // onInteractionStart: (details) {
-      //   scaleFactor = initialScale;
-      // },
-      maxScale: 2.0,
-      onInteractionUpdate: (details) {
-        setState(() {
-          // print("pointer count : " + details.pointerCount.toString());
-          scaleFactor = initialScale = details.scale;
-          print("Scale = " + details.scale.toString());
-        });
-      },
-      child: Container(
-        padding: EdgeInsets.only(top: 15),
-        child: GridView.count(
-          // physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: scaleFactor == 1.0
-              ? 3
-              : double.parse(scaleFactor.toStringAsFixed(1)) > 1.0 &&
-                      double.parse(scaleFactor.toStringAsFixed(1)) < 1.5
-                  ? 2
-                  : double.parse(scaleFactor.toStringAsFixed(1)) > 1.5 &&
-                          double.parse(scaleFactor.toStringAsFixed(1)) < 2.0
-                      ? 1
-                      : double.parse(scaleFactor.toStringAsFixed(1)) < 1.0 &&
-                              double.parse(scaleFactor.toStringAsFixed(1)) > 0.5
-                          ? 4
-                          : double.parse(scaleFactor.toStringAsFixed(1)) <=
-                                      0.5 &&
-                                  double.parse(scaleFactor.toStringAsFixed(1)) >
-                                      0.0
-                              ? 5
-                              : 3,
-          children: [
-            ...allAlbumslist.map(
-              (e) => GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return AlbumsOfAlbumsScreen(e.title, e.id!);
-                    //return PhotosScreen(e.title, e.id!, personlist)
-                  }));
-                },
-                child: CustomAlbum(
-                    e.title,
-                    e.cover_photo!,
-                    scaleFactor == 1.0
-                        ? height! * 0.11
-                        : double.parse(scaleFactor.toStringAsFixed(1)) > 1.0 &&
-                                double.parse(scaleFactor.toStringAsFixed(1)) <
-                                    1.5
-                            ? height! * 0.18
-                            : double.parse(scaleFactor.toStringAsFixed(1)) > 1.5 &&
-                                    double.parse(scaleFactor.toStringAsFixed(1)) <
-                                        2.0
-                                ? height! * 0.40
-                                : double.parse(scaleFactor.toStringAsFixed(1)) <= 0.5 &&
-                                        double.parse(scaleFactor.toStringAsFixed(1)) >
-                                            0.0
-                                    ? height! * 0.08
-                                    : double.parse(scaleFactor.toStringAsFixed(1)) < 1.0 &&
-                                            double.parse(scaleFactor.toStringAsFixed(1)) >
-                                                0.5
-                                        ? height! * 0.1
-                                        : height! * 0.11,
-                    scaleFactor == 1.0
-                        ? width! * 0.3
-                        : double.parse(scaleFactor.toStringAsFixed(1)) > 1.0 &&
-                                double.parse(scaleFactor.toStringAsFixed(1)) <
-                                    1.5
-                            ? width! * 0.45
-                            : double.parse(scaleFactor.toStringAsFixed(1)) > 1.5 &&
-                                    double.parse(scaleFactor.toStringAsFixed(1)) <
-                                        2.0
-                                ? width! * 0.85
-                                : double.parse(scaleFactor.toStringAsFixed(1)) <=
-                                            0.5 &&
-                                        double.parse(scaleFactor.toStringAsFixed(1)) >
-                                            0.0
-                                    ? width! * 0.175
-                                    : double.parse(scaleFactor.toStringAsFixed(1)) <
-                                                1.0 &&
-                                            double.parse(scaleFactor.toStringAsFixed(1)) > 0.5
-                                        ? width! * 0.22
-                                        : width! * 0.3),
-                //85 100
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget allAlbums() {
+  //   return InteractiveViewer(
+  //     scaleEnabled: false,
+  //     // onInteractionStart: (details) {
+  //     //   scaleFactor = initialScale;
+  //     // },
+  //     maxScale: 2.0,
+  //     onInteractionUpdate: (details) {
+  //       setState(() {
+  //         // print("pointer count : " + details.pointerCount.toString());
+  //         scaleFactor = initialScale = details.scale;
+  //         print("Scale = " + details.scale.toString());
+  //       });
+  //     },
+  //     child: Container(
+  //       padding: EdgeInsets.only(top: 15),
+  //       child: GridView.count(
+  //         // physics: const NeverScrollableScrollPhysics(),
+  //         crossAxisCount: scaleFactor == 1.0
+  //             ? 3
+  //             : double.parse(scaleFactor.toStringAsFixed(1)) > 1.0 &&
+  //                     double.parse(scaleFactor.toStringAsFixed(1)) < 1.5
+  //                 ? 2
+  //                 : double.parse(scaleFactor.toStringAsFixed(1)) > 1.5 &&
+  //                         double.parse(scaleFactor.toStringAsFixed(1)) < 2.0
+  //                     ? 1
+  //                     : double.parse(scaleFactor.toStringAsFixed(1)) < 1.0 &&
+  //                             double.parse(scaleFactor.toStringAsFixed(1)) > 0.5
+  //                         ? 4
+  //                         : double.parse(scaleFactor.toStringAsFixed(1)) <=
+  //                                     0.5 &&
+  //                                 double.parse(scaleFactor.toStringAsFixed(1)) >
+  //                                     0.0
+  //                             ? 5
+  //                             : 3,
+  //         children: [
+  //           ...allAlbumslist.map(
+  //             (e) => GestureDetector(
+  //               onTap: () {
+  //                 Navigator.push(context, MaterialPageRoute(builder: (context) {
+  //                   return AlbumsOfAlbumsScreen(e.title, e.id!);
+  //                   //return PhotosScreen(e.title, e.id!, personlist)
+  //                 }));
+  //               },
+  //               child: CustomAlbum(
+  //                   e.title,
+  //                   e.cover_photo!,
+  //                   scaleFactor == 1.0
+  //                       ? height! * 0.11
+  //                       : double.parse(scaleFactor.toStringAsFixed(1)) > 1.0 &&
+  //                               double.parse(scaleFactor.toStringAsFixed(1)) <
+  //                                   1.5
+  //                           ? height! * 0.18
+  //                           : double.parse(scaleFactor.toStringAsFixed(1)) > 1.5 &&
+  //                                   double.parse(scaleFactor.toStringAsFixed(1)) <
+  //                                       2.0
+  //                               ? height! * 0.40
+  //                               : double.parse(scaleFactor.toStringAsFixed(1)) <= 0.5 &&
+  //                                       double.parse(scaleFactor.toStringAsFixed(1)) >
+  //                                           0.0
+  //                                   ? height! * 0.08
+  //                                   : double.parse(scaleFactor.toStringAsFixed(1)) < 1.0 &&
+  //                                           double.parse(scaleFactor.toStringAsFixed(1)) >
+  //                                               0.5
+  //                                       ? height! * 0.1
+  //                                       : height! * 0.11,
+  //                   scaleFactor == 1.0
+  //                       ? width! * 0.3
+  //                       : double.parse(scaleFactor.toStringAsFixed(1)) > 1.0 &&
+  //                               double.parse(scaleFactor.toStringAsFixed(1)) <
+  //                                   1.5
+  //                           ? width! * 0.45
+  //                           : double.parse(scaleFactor.toStringAsFixed(1)) > 1.5 &&
+  //                                   double.parse(scaleFactor.toStringAsFixed(1)) <
+  //                                       2.0
+  //                               ? width! * 0.85
+  //                               : double.parse(scaleFactor.toStringAsFixed(1)) <=
+  //                                           0.5 &&
+  //                                       double.parse(scaleFactor.toStringAsFixed(1)) >
+  //                                           0.0
+  //                                   ? width! * 0.175
+  //                                   : double.parse(scaleFactor.toStringAsFixed(1)) <
+  //                                               1.0 &&
+  //                                           double.parse(scaleFactor.toStringAsFixed(1)) > 0.5
+  //                                       ? width! * 0.22
+  //                                       : width! * 0.3),
+  //               //85 100
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget peopleAlbums() {
     return GestureDetector(
@@ -339,7 +414,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                   //   return PhotosScreen(e.title, e.id!);
                   // }));
                   Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return AlbumsOfAlbumsScreen(e.title, e.id!);
+                    return AlbumsOfAlbumsScreen(e.title, e.id!, "person");
                   }));
                 },
                 child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
@@ -362,7 +437,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!);
+                  return AlbumsOfAlbumsScreen(e.title, e.id!, "event");
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
@@ -384,7 +459,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!);
+                  return AlbumsOfAlbumsScreen(e.title, e.id!, "label");
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
@@ -406,7 +481,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!);
+                  return AlbumsOfAlbumsScreen(e.title, e.id!, "location");
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
@@ -428,7 +503,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!);
+                  return AlbumsOfAlbumsScreen(e.title, e.id!, "date");
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,

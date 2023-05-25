@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:intl/intl.dart';
+import 'package:path/path.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -15,8 +17,9 @@ import '../DBHelper/dbhelper.dart';
 
 class AddEditDetailsScreen extends StatefulWidget {
   int photo_id;
-  int album_id;
-  AddEditDetailsScreen(this.photo_id, this.album_id);
+  //int album_id;
+  // AddEditDetailsScreen(this.photo_id, this.album_id);
+  AddEditDetailsScreen(this.photo_id);
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(33.6412, 73.0635),
     zoom: 14.4746,
@@ -29,6 +32,8 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
   Photo photo = Photo();
   List<Person> plist = [];
   List<Event> elist = [];
+  List<String> oldPersonsNames = [];
+  List<String> newPersonNames = [];
   String? location;
   double? width;
   double? height;
@@ -149,23 +154,34 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (peopleeditIndex != -1 &&
                           peopleController.text != "") {
+                        oldPersonsNames.add(plist[peopleeditIndex].name);
+                        newPersonNames.add(peopleController.text);
                         plist[peopleeditIndex].name = peopleController.text;
                         peopleController.text = "";
+                        await Person.updatePersonFromApi(
+                            oldPersonsNames, newPersonNames);
+                        await Person.updatePersons(plist);
                         setState(() {});
                       }
-                      if (peopleController.text != "" &&
-                          peopleeditIndex == -1) {
-                        Person p = Person();
-                        p.name = peopleController.text;
-                        plist.add(p);
-                        peopleController.text = "";
-                        setState(() {});
-                      }
+                      // if (peopleeditIndex != -1 &&
+                      //     peopleController.text != "") {
+                      //   plist[peopleeditIndex].name = peopleController.text;
+                      //   peopleController.text = "";
+                      //   setState(() {});
+                      // }
+                      // if (peopleController.text != "" &&
+                      //     peopleeditIndex == -1) {
+                      //   Person p = Person();
+                      //   p.name = peopleController.text;
+                      //   plist.add(p);
+                      //   peopleController.text = "";
+                      //   setState(() {});
+                      // }
                     },
-                    child: Icon(Icons.add),
+                    child: Icon(Icons.check),
                     style:
                         TextButton.styleFrom(primary: primaryColor // Text Color
                             ),
@@ -180,6 +196,11 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
                         return ListTile(
                           title: CustomText(
                               plist[ind].name, 0, 0, FontWeight.w400, 0),
+                          leading: Image.network(
+                              '${ip}/faces/${basenameWithoutExtension(photo.title!)}/${plist[ind].name}${extension(photo.title!)}',
+                              //'${ip}/faces/amna-2/unknown_face_b8b5.jpg',
+                              width: 40,
+                              height: 40),
                           trailing: Wrap(
                             spacing: -15, // space between two icons
                             children: [
@@ -194,16 +215,16 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
                                   color: primaryColor,
                                 ),
                               ), // icon-1
-                              IconButton(
-                                onPressed: () {
-                                  plist.removeAt(ind);
-                                  setState(() {});
-                                },
-                                icon: Icon(
-                                  Icons.delete,
-                                  color: primaryColor,
-                                ),
-                              ), // icon-2
+                              // IconButton(
+                              //   onPressed: () {
+                              //     plist.removeAt(ind);
+                              //     setState(() {});
+                              //   },
+                              //   icon: Icon(
+                              //     Icons.delete,
+                              //     color: primaryColor,
+                              //   ),
+                              // ), // icon-2
                             ],
                           ),
                         );
@@ -265,7 +286,9 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
                                 ),
                               ), // icon-1
                               IconButton(
-                                onPressed: () {
+                                onPressed: () async {
+                                  await Event.deleteEvent(
+                                      elist[ind].id!, photo.id!);
                                   elist.removeAt(ind);
                                   setState(() {});
                                 },
@@ -343,7 +366,10 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
                 height: 20,
               ),
               CustomButton("Add", 30, 150, primaryColor, primaryColor,
-                  Colors.white, addeditfunction)
+                  Colors.white, addeditfunction),
+              SizedBox(
+                height: 20,
+              ),
             ],
           ),
         ),
@@ -352,15 +378,31 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
   }
 
   addeditfunction() async {
-    //location pe kaam krna hai
+    List<Event> nonNullIDEvents =
+        elist.where((event) => event.id != null).toList();
+    List<Event> nullIDEvents =
+        elist.where((event) => event.id == null).toList();
     photo.label = labelController.text != "" ? labelController.text : null;
+    DateTime currentDateTime = DateTime.now();
+    String formattedDateTime =
+        DateFormat("yyyy:MM:dd HH:mm:ss").format(currentDateTime);
+    //print(formattedDateTime);
+    photo.last_modified_date = formattedDateTime;
     await DbHelper.instance.editPhotobyid(photo);
-    await DbHelper.instance
-        .inserteditPersonAndAlbumbyid(photo, plist, widget.album_id);
-    await DbHelper.instance.inserteditEventbyid(photo, elist, widget.album_id);
+
+    if (nonNullIDEvents.length > 0) {
+      Event.updateEvents(nonNullIDEvents);
+    }
+    if (nullIDEvents.length > 0) {
+      Event.insertEvents(nullIDEvents, photo.id!);
+    }
+
+    // await DbHelper.instance.inserteditPersonAndAlbumbyid(photo, plist);
+    // await DbHelper.instance.inserteditEventbyid(photo, elist, widget.album_id);
     setState(() {});
   }
 }
+
 
 // import 'package:flutter/material.dart';
 // import 'package:photo_gallery/Models/person.dart';

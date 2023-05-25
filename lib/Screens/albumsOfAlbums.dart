@@ -12,7 +12,8 @@ import '../Utilities/CustomWdigets/customalbum.dart';
 class AlbumsOfAlbumsScreen extends StatefulWidget {
   String albumTitle;
   int album_id;
-  AlbumsOfAlbumsScreen(this.albumTitle, this.album_id);
+  String type;
+  AlbumsOfAlbumsScreen(this.albumTitle, this.album_id, this.type);
 
   @override
   State<AlbumsOfAlbumsScreen> createState() => _AlbumsOfAlbumsScreenState();
@@ -40,80 +41,99 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
   }
 
   void getAllAlbums() async {
-    plist = await DbHelper.instance
-        .getPhotosOfAlbum(widget.album_id, widget.albumTitle);
-    alist = await DbHelper.instance.getAlbumsOfPhotos(plist);
-    personList = await DbHelper.instance.getAllPersons();
-    eventList = await DbHelper.instance.getAllEvents();
-    labelList = await DbHelper.instance.getAllLabels();
-    for (int i = 0; i < alist.length; i++) {
-      personList.forEach((element) {
-        if (element.name == alist[i].title) {
-          peopleAlbumsList.add(alist[i]);
-        }
-      });
-      eventList.forEach((element) {
-        if (element.name == alist[i].title) {
-          eventAlbumsList.add(alist[i]);
-        }
-      });
-      labelList.forEach((element) {
-        if (element == alist[i].title) {
-          labelAlbumsList.add(alist[i]);
-        }
-      });
-      // for location and for date too
+    if (widget.type == "person") {
+      plist = await DbHelper.instance.getPhotosofPersonById(widget.album_id);
+    } else if (widget.type == "event") {
+      plist = await DbHelper.instance.getPhotosofEventById(widget.album_id);
+    } else if (widget.type == "date") {
+      plist = await DbHelper.instance.getPhotosofDateByPhotoId(widget.album_id);
+    } else if (widget.type == "label") {
+      plist =
+          await DbHelper.instance.getPhotosofLabelByTitle(widget.albumTitle);
+    } else if (widget.type == "location") {
+      plist =
+          await DbHelper.instance.getPhotosofLocationByTitle(widget.albumTitle);
     }
-    dateAlbumsList = getDatesAlbums();
+    peopleAlbumsList = await Album.getPersonsAlbumsByPhotos(plist);
+    eventAlbumsList = await Album.getEventsAlbumsByPhotos(plist);
+    dateAlbumsList = await Album.getDatesAlbumsByPhotos(plist);
+    labelAlbumsList = await Album.getLabelsAlbumsByPhotos(plist);
+    locationAlbumsList = await Album.getLocationsAlbumsByPhotos(plist);
     setState(() {});
+    // plist = await DbHelper.instance
+    //     .getPhotosOfAlbum(widget.album_id, widget.albumTitle);
+    // alist = await DbHelper.instance.getAlbumsOfPhotos(plist);
+    // personList = await DbHelper.instance.getAllPersons();
+    // eventList = await DbHelper.instance.getAllEvents();
+    // labelList = await DbHelper.instance.getAllLabels();
+    // for (int i = 0; i < alist.length; i++) {
+    //   personList.forEach((element) {
+    //     if (element.name == alist[i].title) {
+    //       peopleAlbumsList.add(alist[i]);
+    //     }
+    //   });
+    //   eventList.forEach((element) {
+    //     if (element.name == alist[i].title) {
+    //       eventAlbumsList.add(alist[i]);
+    //     }
+    //   });
+    //   labelList.forEach((element) {
+    //     if (element == alist[i].title) {
+    //       labelAlbumsList.add(alist[i]);
+    //     }
+    //   });
+    //   // for location and for date too
+    // }
+    // dateAlbumsList = getDatesAlbums();
+    // setState(() {});
   }
 
-  List<Album> getDatesAlbums() {
-    List<Album> datesAlbumlist = [];
-    List<String> distinctDates = [];
-    Album a;
-    late DateTime dateTime;
-    for (var photo in plist) {
-      String date =
-          photo.date_taken!.replaceFirst(':', '-').replaceFirst(':', '-');
-      ;
-      dateTime = DateTime.parse(date);
-      String dateFormatted =
-          "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}";
-      if (!distinctDates.contains(dateFormatted)) {
-        distinctDates.add(dateFormatted);
-      }
-    }
-    for (int i = 0; i < distinctDates.length; i++) {
-      a = Album();
-      a.id = int.parse(distinctDates[i].replaceAll("-", ""));
-      a.title = distinctDates[i];
-      Photo photoOfDate = plist.firstWhere(
-        (photo) =>
-            DateTime.parse(photo.date_taken!
-                        .replaceFirst(':', '-')
-                        .replaceFirst(':', '-'))
-                    .year ==
-                DateTime.parse(distinctDates[i]).year &&
-            DateTime.parse(photo.date_taken!
-                        .replaceFirst(':', '-')
-                        .replaceFirst(':', '-'))
-                    .month ==
-                DateTime.parse(distinctDates[i]).month &&
-            DateTime.parse(photo.date_taken!
-                        .replaceFirst(':', '-')
-                        .replaceFirst(':', '-'))
-                    .day ==
-                DateTime.parse(distinctDates[i]).day,
-      );
-      if (photoOfDate != null) {
-        a.cover_photo = photoOfDate.path;
-      }
-      datesAlbumlist.add(a);
-    }
+  // List<Album> getDatesAlbums() {
+  //   List<Album> datesAlbumlist = [];
+  //   List<String> distinctDates = [];
+  //   Album a;
+  //   late DateTime dateTime;
+  //   for (var photo in plist) {
+  //     String date =
+  //         photo.date_taken!.replaceFirst(':', '-').replaceFirst(':', '-');
+  //     ;
+  //     dateTime = DateTime.parse(date);
+  //     String dateFormatted =
+  //         "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}";
+  //     if (!distinctDates.contains(dateFormatted)) {
+  //       distinctDates.add(dateFormatted);
+  //     }
+  //   }
+  //   for (int i = 0; i < distinctDates.length; i++) {
+  //     a = Album();
+  //     a.id = int.parse(distinctDates[i].replaceAll("-", ""));
+  //     a.title = distinctDates[i];
+  //     Photo photoOfDate = plist.firstWhere(
+  //       (photo) =>
+  //           DateTime.parse(photo.date_taken!
+  //                       .replaceFirst(':', '-')
+  //                       .replaceFirst(':', '-'))
+  //                   .year ==
+  //               DateTime.parse(distinctDates[i]).year &&
+  //           DateTime.parse(photo.date_taken!
+  //                       .replaceFirst(':', '-')
+  //                       .replaceFirst(':', '-'))
+  //                   .month ==
+  //               DateTime.parse(distinctDates[i]).month &&
+  //           DateTime.parse(photo.date_taken!
+  //                       .replaceFirst(':', '-')
+  //                       .replaceFirst(':', '-'))
+  //                   .day ==
+  //               DateTime.parse(distinctDates[i]).day,
+  //     );
+  //     if (photoOfDate != null) {
+  //       a.cover_photo = photoOfDate.path;
+  //     }
+  //     datesAlbumlist.add(a);
+  //   }
 
-    return datesAlbumlist;
-  }
+  //   return datesAlbumlist;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +226,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return PhotosScreen(e.title, e.id!, plist);
+                  return PhotosScreen(e.title, e.id!, plist, "person");
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
@@ -228,7 +248,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return PhotosScreen(e.title, e.id!, plist);
+                  return PhotosScreen(e.title, e.id!, plist, "event");
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
@@ -250,7 +270,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return PhotosScreen(e.title, e.id!, plist);
+                  return PhotosScreen(e.title, e.id!, plist, "label");
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
@@ -272,7 +292,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return PhotosScreen(e.title, e.id!, plist);
+                  return PhotosScreen(e.title, e.id!, plist, "location");
                 }));
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
@@ -294,9 +314,10 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
             (e) => GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return PhotosScreen(e.title, e.id!, plist);
+                  return PhotosScreen(e.title, e.id!, plist, "date");
                 }));
               },
+
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
             ),

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 class CustomAlbum extends StatefulWidget {
@@ -29,7 +31,8 @@ class _CustomAlbumState extends State<CustomAlbum> {
               // child: Image(image: AssetImage(image)),
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(widget.image),
+                  image:
+                      FileImage(File(widget.image)), //AssetImage(widget.image),
                   fit: BoxFit.cover,
                 ),
                 borderRadius: BorderRadius.circular(13),

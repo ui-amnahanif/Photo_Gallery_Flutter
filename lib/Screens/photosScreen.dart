@@ -9,7 +9,8 @@ class PhotosScreen extends StatefulWidget {
   String albumTitle;
   int album_id;
   List<Photo> photolist;
-  PhotosScreen(this.albumTitle, this.album_id, this.photolist);
+  String type;
+  PhotosScreen(this.albumTitle, this.album_id, this.photolist, this.type);
 
   @override
   State<PhotosScreen> createState() => _PhotosScreenState();
@@ -17,23 +18,35 @@ class PhotosScreen extends StatefulWidget {
 
 class _PhotosScreenState extends State<PhotosScreen> {
   List<Photo> plist = [];
-  List<Photo> photoToDisplaylist = [];
+  //List<Photo> photoToDisplaylist = [];
   double? width;
   double? height;
   @override
   void initState() {
-    getAllPhotos();
+    getAllPhotos(widget.photolist, widget.album_id, widget.albumTitle);
   }
 
-  getAllPhotos() async {
-    plist = await DbHelper.instance
-        .getPhotosOfAlbum(widget.album_id, widget.albumTitle);
-    for (int i = 0; i < widget.photolist.length; i++) {
-      for (int j = 0; j < plist.length; j++) {
-        if (widget.photolist[i].id == plist[j].id) {
-          photoToDisplaylist.add(plist[j]);
-        }
-      }
+  getAllPhotos(List<Photo> pplist, int id, String title) async {
+    // plist = await DbHelper.instance
+    //     .getPhotosOfAlbum(widget.album_id, widget.albumTitle);
+    // for (int i = 0; i < widget.photolist.length; i++) {
+    //   for (int j = 0; j < plist.length; j++) {
+    //     if (widget.photolist[i].id == plist[j].id) {
+    //       photoToDisplaylist.add(plist[j]);
+    //     }
+    //   }
+    // }
+
+    if (widget.type == "person") {
+      plist = await Photo.getPersonPhotosFromPhotosList(pplist, id);
+    } else if (widget.type == "event") {
+      plist = await Photo.getEventnPhotosFromPhotosList(pplist, id);
+    } else if (widget.type == "date") {
+      plist = await Photo.getDatesPhotosFromPhotosList(pplist, id);
+    } else if (widget.type == "label") {
+      plist = await Photo.getLabelPhotosFromPhotosList(pplist, title);
+    } else if (widget.type == "location") {
+      plist = await Photo.getLocationPhotosFromPhotosList(pplist, title);
     }
     setState(() {});
   }
@@ -50,12 +63,21 @@ class _PhotosScreenState extends State<PhotosScreen> {
         padding: EdgeInsets.only(top: height! * 0.020),
         crossAxisCount: 3,
         children: [
-          ...photoToDisplaylist.map(
+          ...plist.map(
             (e) => GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return PhotoScreen(e.title!, e.id!, widget.album_id);
+              onTap: () async {
+                bool? isDeleted = await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  // return PhotoScreen(e.title!, e.id!, widget.album_id);
+                  return PhotoScreen(e);
                 }));
+                if (isDeleted != null) {
+                  if (isDeleted) {
+                    plist.remove(e);
+                    //  getAllPhotos(photoToDisplaylist);
+                    setState(() {});
+                  }
+                }
               },
               child: CustomAlbum(null, e.path, height! * 0.138, width! * 0.31),
             ),

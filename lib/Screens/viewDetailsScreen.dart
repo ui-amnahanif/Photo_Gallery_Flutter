@@ -39,6 +39,11 @@ class _viewDetailsScreenState extends State<viewDetailsScreen> {
     for (int i = 0; i < elist.length; i++) {
       events = "$events ${elist[i].name} , ";
     }
+    if (photo.lat != null) {
+      location =
+          await DbHelper.instance.getCityFromLatLong(photo.lat!, photo.lng!);
+    }
+
     setState(() {});
   }
 
@@ -65,6 +70,12 @@ class _viewDetailsScreenState extends State<viewDetailsScreen> {
           CustomText(events != "" ? "Events : ${events}" : "Events : none", 15,
               null, FontWeight.w400, 0.1),
           CustomText(
+              photo.label != null ? "Label : ${photo.label}" : "Label : none",
+              15,
+              null,
+              FontWeight.w400,
+              0.1),
+          CustomText(
               location != null ? "Location : $location" : "Location : none",
               15,
               null,
@@ -78,14 +89,15 @@ class _viewDetailsScreenState extends State<viewDetailsScreen> {
               null,
               FontWeight.w400,
               0.1),
-          CustomText(
-              photo.last_modified_date != null
-                  ? "Last modified date : ${photo.last_modified_date}"
-                  : "Last modified date : none",
-              15,
-              null,
-              FontWeight.w400,
-              0.1),
+
+          // CustomText(
+          //     photo.last_modified_date != null
+          //         ? "Last modified date : ${photo.last_modified_date}"
+          //         : "Last modified date : none",
+          //     15,
+          //     null,
+          //     FontWeight.w400,
+          //     0.1),
         ],
       ),
     );

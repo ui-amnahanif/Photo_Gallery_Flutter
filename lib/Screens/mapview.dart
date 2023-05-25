@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:latlong2/latlong.dart' as LatLong;
 import 'package:photo_gallery/DBHelper/dbhelper.dart';
 import 'package:photo_gallery/Models/photo.dart';
+import 'package:photo_gallery/Screens/SimplePhotosScreen.dart';
+import 'package:photo_gallery/Screens/photosScreen.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
 
 class MapViewScreen extends StatefulWidget {
@@ -43,7 +47,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
 
   getMarkers() async {
     List<List<Photo>> plist = await getDistanceGroups();
-    markers = setMarkers(plist);
+    markers = await setMarkers(plist);
     setState(() {});
   }
 
@@ -197,15 +201,56 @@ class _MapViewScreenState extends State<MapViewScreen> {
     return false;
   }
 
-  List<Marker> setMarkers(List<List<Photo>> photos) {
+  Future<List<Marker>> setMarkers(List<List<Photo>> photos) async {
     List<Marker> mlist = [];
     for (int i = 0; i < photos.length; i++) {
       Marker myMarker = Marker(
-          markerId: MarkerId(i.toString()),
-          position: LatLng(photos[i][0].lat!, photos[i][0].lng!),
-          infoWindow: InfoWindow(title: "photo count = ${photos[i].length}"));
+        markerId: MarkerId(i.toString()),
+        // icon: await BitmapDescriptor.fromAssetImage(""),
+        // anchor: Offset(0.5, 0.5),
+        // icon: BitmapDescriptor.fromBytes(
+        //     await _createMarkerImageFromText("hello")),
+        position: LatLng(photos[i][0].lat!, photos[i][0].lng!),
+        infoWindow: InfoWindow(
+            title: "photo count = ${photos[i].length}",
+            onTap: () async {
+              await Navigator.push(context,
+                  MaterialPageRoute(builder: (context) {
+                return SimplePhotosScreen(photos[i]);
+              }));
+            }),
+      );
+
       mlist.add(myMarker);
     }
     return mlist;
   }
+
+  // Future<Uint8List> _createMarkerImageFromText(String text) async {
+  //   // Create a TextPainter object to draw the text
+  //   final TextPainter painter = TextPainter(
+  //     text: TextSpan(
+  //       text: text,
+  //       style: TextStyle(fontSize: 20.0),
+  //     ),
+  //     textDirection: TextDirection.ltr,
+  //   );
+  //   painter.layout();
+
+  //   // Create a PictureRecorder object to record a picture
+  //   final PictureRecorder recorder = PictureRecorder();
+  //   final Canvas canvas = Canvas(recorder);
+
+  //   // Draw the text on the canvas at the top-left position
+  //   painter.paint(canvas, Offset.zero);
+
+  //   // End recording and generate an image
+  //   final Picture picture = recorder.endRecording();
+  //   final img =
+  //       await picture.toImage(painter.width.toInt(), painter.height.toInt());
+  //   final data = await img.toByteData(format: ImageByteFormat.png);
+
+  //   // return the byte array as a Uint8List
+  //   return data!.buffer.asUint8List();
+  // }
 }
