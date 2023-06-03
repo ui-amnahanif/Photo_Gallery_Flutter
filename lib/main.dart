@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:photo_gallery/Screens/addEditDetailsScreen.dart';
+import 'package:photo_gallery/Screens/albums.dart';
+import 'package:photo_gallery/Screens/albumsOfAlbums.dart';
 import 'package:photo_gallery/Screens/home.dart';
 
 void main() {

@@ -10,7 +10,8 @@ class PhotosScreen extends StatefulWidget {
   int album_id;
   List<Photo> photolist;
   String type;
-  PhotosScreen(this.albumTitle, this.album_id, this.photolist, this.type);
+  PhotosScreen(this.albumTitle, this.album_id, this.photolist, this.type,
+      {required Function() onBack});
 
   @override
   State<PhotosScreen> createState() => _PhotosScreenState();
@@ -23,6 +24,10 @@ class _PhotosScreenState extends State<PhotosScreen> {
   double? height;
   @override
   void initState() {
+    getAllPhotos(widget.photolist, widget.album_id, widget.albumTitle);
+  }
+
+  void reset() {
     getAllPhotos(widget.photolist, widget.album_id, widget.albumTitle);
   }
 
@@ -69,12 +74,20 @@ class _PhotosScreenState extends State<PhotosScreen> {
                 bool? isDeleted = await Navigator.push(context,
                     MaterialPageRoute(builder: (context) {
                   // return PhotoScreen(e.title!, e.id!, widget.album_id);
-                  return PhotoScreen(e);
+                  return PhotoScreen(
+                    e,
+                    onBack: () {},
+                  );
                 }));
                 if (isDeleted != null) {
                   if (isDeleted) {
                     plist.remove(e);
                     //  getAllPhotos(photoToDisplaylist);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Photo deleted successfully'),
+                      ),
+                    );
                     setState(() {});
                   }
                 }

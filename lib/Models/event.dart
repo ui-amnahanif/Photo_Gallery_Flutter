@@ -15,7 +15,7 @@ class Event {
     id = e["id"];
     name = e["name"];
   }
-  static void insertEvents(List<Event> events, int photoId) async {
+  static Future<void> insertEvents(List<Event> events, int photoId) async {
     //get all event from db
     List<Event> elist = await DbHelper.instance.getAllEvents();
     bool isEventPresent = false;
@@ -45,9 +45,9 @@ class Event {
     }
   }
 
-  static void updateEvents(List<Event> elist) {
+  static Future<void> updateEvents(List<Event> elist) async {
     for (int i = 0; i < elist.length; i++) {
-      DbHelper.instance.UpdateEvent(elist[i]);
+      await DbHelper.instance.UpdateEvent(elist[i]);
     }
   }
 

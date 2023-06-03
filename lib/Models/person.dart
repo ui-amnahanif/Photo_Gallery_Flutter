@@ -20,7 +20,7 @@ class Person {
     name = p["name"];
   }
 
-  static void insertPersons(List<Person> persons, int photoId) async {
+  static Future<void> insertPersons(List<Person> persons, int photoId) async {
     //get all persons from db
     List<Person> plist = await DbHelper.instance.getAllPersons();
     bool isPersonPresent = false;

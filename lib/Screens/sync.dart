@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:photo_gallery/Models/photo.dart';
 import 'package:photo_gallery/Utilities/CustomWdigets/custombutton.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
 
@@ -26,7 +27,7 @@ class SyncScreen extends StatelessWidget {
                 height: 30,
               ),
               CustomButton("Sync Now", 50, 180, primaryColor, primaryColor,
-                  Colors.white, () {})
+                  Colors.white, Photo.syncingPhoto)
             ],
           ),
         ),

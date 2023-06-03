@@ -15,6 +15,7 @@ class Photo {
   String? label;
   String? date_taken;
   String? last_modified_date;
+  int? isSynced;
   Photo();
 
   Map<String, dynamic> toMap() {
@@ -27,6 +28,7 @@ class Photo {
     pmap["label"] = label;
     pmap["date_taken"] = date_taken;
     pmap["last_modified_date"] = last_modified_date;
+    pmap["isSynced"] = isSynced;
     return pmap;
   }
 
@@ -39,6 +41,7 @@ class Photo {
     label = pmap["label"];
     date_taken = pmap["date_taken"];
     last_modified_date = pmap["last_modified_date"];
+    isSynced = pmap["isSynced"];
   }
   static Future<List<String>> saveImage(File f) async {
     List<String> people = [];
@@ -163,5 +166,55 @@ class Photo {
       // }
     }
     return PhotosList;
+  }
+
+  static Future<bool> syncingPhoto() async {
+    String url = '${ip}/syncNow';
+    Uri uri = Uri.parse(url);
+    List<Map<String, dynamic>> mapList = [];
+    List<Photo> plist = await DbHelper.instance.getAllPhotos();
+    Map<String, dynamic> map;
+    for (int i = 0; i < plist.length; i++) {
+      map = Map<String, dynamic>();
+      map["title"] = plist[i].title;
+      map["lat"] = plist[i].lat;
+      map["lng"] = plist[i].lng;
+      map["label"] = plist[i].label;
+      map["date_taken"] = plist[i].date_taken;
+      map["last_modified_date"] = plist[i].last_modified_date;
+      map["people"] = [];
+      map["isSynced"] = plist[i].isSynced;
+      List<Person> perlist =
+          await DbHelper.instance.getAllPersonsByPhotoId(plist[i].id!);
+      for (int j = 0; j < perlist.length; j++) {
+        map["people"].add(perlist[j].name.toString());
+      }
+      map["events"] = [];
+      List<Event> elist =
+          await DbHelper.instance.getAllEventsByPhotoId(plist[i].id!);
+      for (int j = 0; j < elist.length; j++) {
+        map["events"].add(elist[j].name.toString());
+      }
+      mapList.add(map);
+    }
+    for (int i = 0; i < mapList.length; i++) {
+      final map = mapList[i];
+      print(map.toString());
+      print("Map $i:");
+      map.forEach((key, value) {
+        print("$key: $value");
+      });
+    }
+    final json = jsonEncode(mapList);
+    print(json);
+    //print(mapList.toString());
+    final response = await http.post(uri,
+        body: json,
+        headers: <String, String>{'Content-Type': 'application/json'});
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }

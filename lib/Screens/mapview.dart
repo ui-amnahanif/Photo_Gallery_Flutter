@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart' as LatLong;
 import 'package:photo_gallery/DBHelper/dbhelper.dart';
 import 'package:photo_gallery/Models/photo.dart';
 import 'package:photo_gallery/Screens/SimplePhotosScreen.dart';
+import 'package:photo_gallery/Screens/albumsOfAlbums.dart';
 import 'package:photo_gallery/Screens/photosScreen.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
 
@@ -43,6 +44,10 @@ class _MapViewScreenState extends State<MapViewScreen> {
     //     infoWindow: InfoWindow(title: "my position"));
     // markers.add(myMarker);
     getCurrentLatLngPosition();
+  }
+
+  void reset() {
+    setState(() {});
   }
 
   getMarkers() async {
@@ -214,10 +219,15 @@ class _MapViewScreenState extends State<MapViewScreen> {
         infoWindow: InfoWindow(
             title: "photo count = ${photos[i].length}",
             onTap: () async {
-              await Navigator.push(context,
-                  MaterialPageRoute(builder: (context) {
-                return SimplePhotosScreen(photos[i]);
-              }));
+              String city = await DbHelper.instance
+                  .getCityFromLatLong(photos[i][0].lat!, photos[i][0].lng!);
+              // await Navigator.push(context,
+              //     MaterialPageRoute(builder: (context) {
+              //   return AlbumsOfAlbumsScreen(photos[i], city);
+              // }));
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => AlbumsOfAlbumsScreen(photos[i], city,
+                      onBack: () => reset())));
             }),
       );
 

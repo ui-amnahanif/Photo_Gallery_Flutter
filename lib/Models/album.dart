@@ -26,17 +26,40 @@ class Album {
   static Future<List<Album>> getAllPersonsAlbums() async {
     List<Album> alist = [];
     Photo p;
+    bool isUnknownAlbumCreated = false;
     //get all persons from db
     List<Person> plist = await DbHelper.instance.getAllPersons();
     Album a;
     for (int i = 0; i < plist.length; i++) {
-      a = Album();
-      a.id = plist[i].id;
-      a.title = plist[i].name;
-      p = await DbHelper.instance.getFirstPhotoOfPersonById(plist[i].id!);
-      a.cover_photo = p.path;
-      alist.add(a);
+      if (plist[i].name.split('_')[0] == "unknown") {
+        if (!isUnknownAlbumCreated) {
+          a = Album();
+          a.id = plist[i].id;
+          a.title = "Unknown";
+          p = await DbHelper.instance.getFirstPhotoOfPersonById(plist[i].id!);
+          a.cover_photo = p.path;
+          alist.add(a);
+          isUnknownAlbumCreated = true;
+        }
+      } else {
+        a = Album();
+        a.id = plist[i].id;
+        a.title = plist[i].name;
+        p = await DbHelper.instance.getFirstPhotoOfPersonById(plist[i].id!);
+        a.cover_photo = p.path;
+        alist.add(a);
+      }
     }
+
+    // Find the index of the unknown album object.
+    int unknownIndex = alist.indexWhere((album) => album.title == 'Unknown');
+    List<Album> duplicatedAlbums = alist.map((album) => album).toList();
+    // If the unknown album object is found, move it to the last of the list.
+    if (unknownIndex != -1) {
+      alist.removeAt(unknownIndex);
+      alist.add(duplicatedAlbums[unknownIndex]);
+    }
+
     return alist;
   }
 
@@ -198,9 +221,11 @@ class Album {
     Set<String> distinctDatesSet = {};
 
     for (Photo photo in plist) {
-      String date = photo.date_taken!.substring(
-          0, 10); // Extract only the first 10 characters (yyyy:mm:dd)
-      distinctDatesSet.add(date); // Add the date to the set of distinct dates
+      if (photo.date_taken != null) {
+        String date = photo.date_taken!.substring(
+            0, 10); // Extract only the first 10 characters (yyyy:mm:dd)
+        distinctDatesSet.add(date); // Add the date to the set of distinct dates
+      }
     }
     List<String> distinctDatesList = distinctDatesSet.toList();
     for (int i = 0; i < distinctDatesList.length; i++) {

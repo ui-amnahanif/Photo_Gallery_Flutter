@@ -36,7 +36,8 @@ class DbHelper {
                       path text,
                       label text,
                       date_taken text,
-                      last_modified_date text
+                      last_modified_date text,
+                      isSynced integer
                     )
                   ''';
     db.execute(query);
@@ -389,6 +390,17 @@ class DbHelper {
     return p;
   }
 
+  Future<List<Photo>> getAllPhotos() async {
+    Database db = await instance.database;
+    List<Photo> plist = [];
+    List<Map<String, dynamic>> data = await db.query("Photo");
+    for (int i = 0; i < data.length; i++) {
+      plist.add(Photo.fromMap(data[i]));
+    }
+
+    return plist;
+  }
+
   Future<List<Person>> getPersonDetailsByPhotoId(int id) async {
     Database db = await instance.database;
     List<int> person_ids = [];
@@ -733,7 +745,9 @@ class DbHelper {
       String query =
           "SELECT * from photo where SUBSTR(date_taken, 1, 10) like '${distict_dates[i]["distinct_date"]}' limit 1;";
       List<Map<String, dynamic>> data1 = await db.rawQuery(query);
-      plist.add(Photo.fromMap(data1[0]));
+      if (data1.length >= 1) {
+        plist.add(Photo.fromMap(data1[0]));
+      }
     }
     return plist;
   }
@@ -746,6 +760,25 @@ class DbHelper {
     List<Map<String, dynamic>> personsPhotos = await db.rawQuery(query);
     for (int i = 0; i < personsPhotos.length; i++) {
       plist.add(Photo.fromMap(personsPhotos[i]));
+    }
+    return plist;
+  }
+
+  Future<List<Photo>> getPhotosofUnknownPersons() async {
+    Database db = await instance.database;
+    List<Photo> plist = [];
+    // String query =
+    //     "SELECT p.* FROM Person p JOIN PhotoPerson pp ON p.id = pp.person_id JOIN Photo ph ON pp.photo_id = ph.id WHERE  SUBSTR(p.name, 1, INSTR(p.name, '_') - 1) LIKE '%unknown%';";
+    String query =
+        "Select ph.* From Photo ph Join PhotoPerson pp ON ph.id = pp.photo_id JOIN Person p on pp.person_id=p.id WHERE SUBSTR(p.name, 1, INSTR(p.name, '_') - 1) LIKE '%unknown%';";
+    List<Map<String, dynamic>> personsPhotos = await db.rawQuery(query);
+    for (int i = 0; i < personsPhotos.length; i++) {
+      if (plist.length == 0) {
+        plist.add(Photo.fromMap(personsPhotos[i]));
+      } else if (!plist.any((element) =>
+          element.id == int.parse(personsPhotos[i]["id"].toString()))) {
+        plist.add(Photo.fromMap(personsPhotos[i]));
+      }
     }
     return plist;
   }

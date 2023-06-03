@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:native_exif/native_exif.dart';
 import 'package:path_provider/path_provider.dart';
@@ -32,7 +33,21 @@ class _AlbummsScreenState extends State<AlbummsScreen>
   double scaleFactor = 1.0;
   @override
   void initState() {
+    createFolder();
     getAllAlbums();
+  }
+
+  void createFolder() async {
+    final Directory? appDir = await getExternalStorageDirectory();
+    final String imagesDir = path.join(appDir!.path, 'images');
+    if (!await Directory(imagesDir).exists()) {
+      Directory(imagesDir).create(recursive: true);
+    }
+  }
+
+  void reset() {
+    getAllAlbums();
+    setState(() {});
   }
 
   void getAllAlbums() async {
@@ -89,9 +104,9 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                               await getExternalStorageDirectory();
                           final String imagesDir =
                               path.join(appDir!.path, 'images');
-                          if (!await Directory(imagesDir).exists()) {
-                            Directory(imagesDir).create(recursive: true);
-                          }
+                          // if (!await Directory(imagesDir).exists()) {
+                          //   Directory(imagesDir).create(recursive: true);
+                          // }
                           // Directory dir = await Directory(imagesDir)
                           //     .create(recursive: true);
 
@@ -152,7 +167,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 controller: _tabController,
                 labelColor: Colors.black,
                 labelPadding: EdgeInsets.all(4),
-                tabs: [
+                tabs: const [
                   Text(
                     "Date",
                   ),
@@ -195,8 +210,10 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     List<Person> plist = [];
     p.path = ImagePath;
     p.title = title;
+    p.isSynced = 0;
     List<String> people = [];
     final exif = await Exif.fromPath(ImagePath);
+    final latlng = await exif.getLatLong();
     final data = await exif.getAttributes() ?? {};
     if (!data.isEmpty) {
       if (data.containsKey("DateTimeOriginal")) {
@@ -209,6 +226,49 @@ class _AlbummsScreenState extends State<AlbummsScreen>
         p.lng = double.parse(data["GPSLongitude"].toString());
       }
     }
+    exif.close();
+    // final fileBytes = File(ImagePath).readAsBytesSync();
+    // final data = await readExifFromBytes(fileBytes);
+
+    // if (!data.isEmpty) {
+    //   if (data.containsKey("Image DateTime")) {
+    //     p.date_taken = data["Image DateTime"].toString();
+    //   }
+    //   if (data.containsKey("GPS GPSLatitude")) {
+    //     String latitude = data["GPS GPSLatitude"].toString();
+    //     List<String> substrings =
+    //         latitude.replaceAll('[', '').replaceAll(']', '').split(', ');
+
+    //     // parse the substrings into double values
+    //     double degrees = double.parse(substrings[0]);
+    //     double minutes = double.parse(substrings[1]);
+    //     List<String> parts = substrings[2].split("/");
+    //     double numerator = double.parse(parts[0]);
+    //     double denominator = double.parse(parts[1]);
+    //     double seconds = numerator / denominator;
+
+    //     // combine degrees, minutes and seconds into decimal degrees
+    //     double decimalDegrees = degrees + (minutes / 60) + (seconds / 3600);
+    //     p.lat = decimalDegrees;
+    //   }
+    //   if (data.containsKey("GPS GPSLongitude")) {
+    //     String latitude = data["GPS GPSLongitude"].toString();
+    //     List<String> substrings =
+    //         latitude.replaceAll('[', '').replaceAll(']', '').split(', ');
+
+    //     // parse the substrings into double values
+    //     double degrees = double.parse(substrings[0]);
+    //     double minutes = double.parse(substrings[1]);
+    //     List<String> parts = substrings[2].split("/");
+    //     double numerator = double.parse(parts[0]);
+    //     double denominator = double.parse(parts[1]);
+    //     double seconds = numerator / denominator;
+
+    //     // combine degrees, minutes and seconds into decimal degrees
+    //     double decimalDegrees = degrees + (minutes / 60) + (seconds / 3600);
+    //     p.lng = decimalDegrees;
+    //   }
+    // }
     people = await Photo.saveImage(image);
     Person per;
     for (int i = 0; i < people.length; i++) {
@@ -223,7 +283,12 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     //       .inserteditPersonAndAlbumbyid(lastInsertedPhoto, plist);
 
     int photoId = await DbHelper.instance.insertPhoto(p);
-    Person.insertPersons(plist, photoId);
+    await Person.insertPersons(plist, photoId);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Albums created successfully'),
+      ),
+    );
     getAllAlbums();
   }
 
@@ -409,13 +474,28 @@ class _AlbummsScreenState extends State<AlbummsScreen>
           children: [
             ...peopleAlbumsList.map(
               (e) => GestureDetector(
-                onTap: () {
+                onTap: () async {
                   // Navigator.push(context, MaterialPageRoute(builder: (context) {
                   //   return PhotosScreen(e.title, e.id!);
                   // }));
-                  Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return AlbumsOfAlbumsScreen(e.title, e.id!, "person");
+                  List<Photo> plistToPass = [];
+                  if (e.title != "Unknown") {
+                    plistToPass =
+                        await DbHelper.instance.getPhotosofPersonById(e.id!);
+                  } else {
+                    plistToPass =
+                        await DbHelper.instance.getPhotosofUnknownPersons();
+                  }
+
+                  await Navigator.push(context,
+                      MaterialPageRoute(builder: (context) {
+                    return AlbumsOfAlbumsScreen(
+                      plistToPass,
+                      e.title,
+                      onBack: () {},
+                    );
                   }));
+                  getAllAlbums();
                 },
                 child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                     width! * 0.3), //85 100
@@ -435,10 +515,18 @@ class _AlbummsScreenState extends State<AlbummsScreen>
         children: [
           ...eventAlbumsList.map(
             (e) => GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!, "event");
+              onTap: () async {
+                List<Photo> plistToPass =
+                    await DbHelper.instance.getPhotosofEventById(e.id!);
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return AlbumsOfAlbumsScreen(
+                    plistToPass,
+                    e.title,
+                    onBack: () {},
+                  );
                 }));
+                getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
@@ -457,10 +545,18 @@ class _AlbummsScreenState extends State<AlbummsScreen>
         children: [
           ...labelAlbumsList.map(
             (e) => GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!, "label");
+              onTap: () async {
+                List<Photo> plistToPass =
+                    await DbHelper.instance.getPhotosofLabelByTitle(e.title);
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return AlbumsOfAlbumsScreen(
+                    plistToPass,
+                    e.title,
+                    onBack: () {},
+                  );
                 }));
+                getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
@@ -479,10 +575,18 @@ class _AlbummsScreenState extends State<AlbummsScreen>
         children: [
           ...locationAlbumsList.map(
             (e) => GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!, "location");
+              onTap: () async {
+                List<Photo> plistToPass =
+                    await DbHelper.instance.getPhotosofLocationByTitle(e.title);
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return AlbumsOfAlbumsScreen(
+                    plistToPass,
+                    e.title,
+                    onBack: () {},
+                  );
                 }));
+                getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
@@ -501,10 +605,18 @@ class _AlbummsScreenState extends State<AlbummsScreen>
         children: [
           ...dateAlbumsList.map(
             (e) => GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AlbumsOfAlbumsScreen(e.title, e.id!, "date");
+              onTap: () async {
+                List<Photo> plistToPass =
+                    await DbHelper.instance.getPhotosofDateByPhotoId(e.id!);
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return AlbumsOfAlbumsScreen(
+                    plistToPass,
+                    e.title,
+                    onBack: () {},
+                  );
                 }));
+                getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100

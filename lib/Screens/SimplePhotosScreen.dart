@@ -41,7 +41,10 @@ class _SimplePhotosScreenState extends State<SimplePhotosScreen> {
               onTap: () async {
                 bool? isDeleted = await Navigator.push(context,
                     MaterialPageRoute(builder: (context) {
-                  return PhotoScreen(e);
+                  return PhotoScreen(
+                    e,
+                    onBack: () {},
+                  );
                 }));
                 if (isDeleted != null) {
                   if (isDeleted) {

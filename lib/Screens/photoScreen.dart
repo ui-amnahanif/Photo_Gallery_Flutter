@@ -14,7 +14,7 @@ class PhotoScreen extends StatefulWidget {
   // int album_id;
   // PhotoScreen(this.photoTitle, this.photo_id, this.album_id);
   Photo photo;
-  PhotoScreen(this.photo);
+  PhotoScreen(this.photo, {required Function() onBack});
 
   @override
   State<PhotoScreen> createState() => _PhotoScreenState();

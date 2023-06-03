@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:photo_gallery/Models/photo.dart';
+import 'package:photo_gallery/Screens/photoScreen.dart';
 import 'package:photo_gallery/Screens/photosScreen.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
-
-import '../DBHelper/dbhelper.dart';
 import '../Models/album.dart';
-import '../Models/event.dart';
-import '../Models/person.dart';
 import '../Utilities/CustomWdigets/customalbum.dart';
 
 class AlbumsOfAlbumsScreen extends StatefulWidget {
-  String albumTitle;
-  int album_id;
-  String type;
-  AlbumsOfAlbumsScreen(this.albumTitle, this.album_id, this.type);
+  // String albumTitle;
+  // int album_id;
+  // String type;
+  // AlbumsOfAlbumsScreen(this.albumTitle, this.album_id, this.type);
+  List<Photo> plist;
+  String title;
+  AlbumsOfAlbumsScreen(this.plist, this.title, {required Function() onBack});
 
   @override
   State<AlbumsOfAlbumsScreen> createState() => _AlbumsOfAlbumsScreenState();
@@ -21,16 +21,16 @@ class AlbumsOfAlbumsScreen extends StatefulWidget {
 
 class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
     with TickerProviderStateMixin {
-  List<Photo> plist = [];
-  List<Album> alist = [];
+  // List<Photo> plist = [];
+  //List<Album> alist = [];
   List<Album> peopleAlbumsList = [];
   List<Album> eventAlbumsList = [];
   List<Album> locationAlbumsList = [];
   List<Album> labelAlbumsList = [];
   List<Album> dateAlbumsList = [];
-  List<Person> personList = [];
-  List<Event> eventList = [];
-  List<String> labelList = [];
+  // List<Person> personList = [];
+  //List<Event> eventList = [];
+  //List<String> labelList = [];
   //locationlist
   double? width;
   double? height;
@@ -40,25 +40,29 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
     getAllAlbums();
   }
 
+  void reset() {
+    getAllAlbums();
+  }
+
   void getAllAlbums() async {
-    if (widget.type == "person") {
-      plist = await DbHelper.instance.getPhotosofPersonById(widget.album_id);
-    } else if (widget.type == "event") {
-      plist = await DbHelper.instance.getPhotosofEventById(widget.album_id);
-    } else if (widget.type == "date") {
-      plist = await DbHelper.instance.getPhotosofDateByPhotoId(widget.album_id);
-    } else if (widget.type == "label") {
-      plist =
-          await DbHelper.instance.getPhotosofLabelByTitle(widget.albumTitle);
-    } else if (widget.type == "location") {
-      plist =
-          await DbHelper.instance.getPhotosofLocationByTitle(widget.albumTitle);
-    }
-    peopleAlbumsList = await Album.getPersonsAlbumsByPhotos(plist);
-    eventAlbumsList = await Album.getEventsAlbumsByPhotos(plist);
-    dateAlbumsList = await Album.getDatesAlbumsByPhotos(plist);
-    labelAlbumsList = await Album.getLabelsAlbumsByPhotos(plist);
-    locationAlbumsList = await Album.getLocationsAlbumsByPhotos(plist);
+    // if (widget.type == "person") {
+    //   plist = await DbHelper.instance.getPhotosofPersonById(widget.album_id);
+    // } else if (widget.type == "event") {
+    //   plist = await DbHelper.instance.getPhotosofEventById(widget.album_id);
+    // } else if (widget.type == "date") {
+    //   plist = await DbHelper.instance.getPhotosofDateByPhotoId(widget.album_id);
+    // } else if (widget.type == "label") {
+    //   plist =
+    //       await DbHelper.instance.getPhotosofLabelByTitle(widget.albumTitle);
+    // } else if (widget.type == "location") {
+    //   plist =
+    //       await DbHelper.instance.getPhotosofLocationByTitle(widget.albumTitle);
+    // }
+    peopleAlbumsList = await Album.getPersonsAlbumsByPhotos(widget.plist);
+    eventAlbumsList = await Album.getEventsAlbumsByPhotos(widget.plist);
+    dateAlbumsList = await Album.getDatesAlbumsByPhotos(widget.plist);
+    labelAlbumsList = await Album.getLabelsAlbumsByPhotos(widget.plist);
+    locationAlbumsList = await Album.getLocationsAlbumsByPhotos(widget.plist);
     setState(() {});
     // plist = await DbHelper.instance
     //     .getPhotosOfAlbum(widget.album_id, widget.albumTitle);
@@ -142,7 +146,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
     TabController _tabController = TabController(length: 5, vsync: this);
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.albumTitle),
+        title: Text(widget.title),
         backgroundColor: primaryColor,
       ),
       // floatingActionButton: FloatingActionButton(
@@ -160,7 +164,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                 controller: _tabController,
                 labelColor: Colors.black,
                 labelPadding: EdgeInsets.all(4),
-                tabs: [
+                tabs: const [
                   Text(
                     "Date",
                   ),
@@ -224,10 +228,18 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
         children: [
           ...peopleAlbumsList.map(
             (e) => GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return PhotosScreen(e.title, e.id!, plist, "person");
+              onTap: () async {
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return PhotosScreen(
+                    e.title,
+                    e.id!,
+                    widget.plist,
+                    "person",
+                    onBack: () {},
+                  );
                 }));
+                getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
@@ -246,10 +258,18 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
         children: [
           ...eventAlbumsList.map(
             (e) => GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return PhotosScreen(e.title, e.id!, plist, "event");
+              onTap: () async {
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return PhotosScreen(
+                    e.title,
+                    e.id!,
+                    widget.plist,
+                    "event",
+                    onBack: () {},
+                  );
                 }));
+                getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
@@ -268,10 +288,18 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
         children: [
           ...labelAlbumsList.map(
             (e) => GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return PhotosScreen(e.title, e.id!, plist, "label");
+              onTap: () async {
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return PhotosScreen(
+                    e.title,
+                    e.id!,
+                    widget.plist,
+                    "label",
+                    onBack: () {},
+                  );
                 }));
+                getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
@@ -290,10 +318,18 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
         children: [
           ...locationAlbumsList.map(
             (e) => GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return PhotosScreen(e.title, e.id!, plist, "location");
+              onTap: () async {
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return PhotosScreen(
+                    e.title,
+                    e.id!,
+                    widget.plist,
+                    "location",
+                    onBack: () {},
+                  );
                 }));
+                getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
                   width! * 0.3), //85 100
@@ -312,10 +348,18 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
         children: [
           ...dateAlbumsList.map(
             (e) => GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return PhotosScreen(e.title, e.id!, plist, "date");
+              onTap: () async {
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return PhotosScreen(
+                    e.title,
+                    e.id!,
+                    widget.plist,
+                    "date",
+                    onBack: () {},
+                  );
                 }));
+                getAllAlbums();
               },
 
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,

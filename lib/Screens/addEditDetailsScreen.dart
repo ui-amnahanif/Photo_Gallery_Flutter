@@ -164,6 +164,11 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
                         await Person.updatePersonFromApi(
                             oldPersonsNames, newPersonNames);
                         await Person.updatePersons(plist);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Name Updated successfully'),
+                          ),
+                        );
                         setState(() {});
                       }
                       // if (peopleeditIndex != -1 &&
@@ -365,8 +370,56 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
               SizedBox(
                 height: 20,
               ),
-              CustomButton("Add", 30, 150, primaryColor, primaryColor,
-                  Colors.white, addeditfunction),
+              // CustomButton("Add", 30, 150, primaryColor, primaryColor,
+              //     Colors.white, addeditfunction),
+              InkWell(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(50.0),
+                      border: Border.all(color: primaryColor, width: 2),
+                      color: primaryColor,
+                    ),
+                    width: 150,
+                    height: 30,
+                    child: Center(
+                      child: Text(
+                        "Add",
+                        textScaleFactor: 1.5,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  onTap: () async {
+                    List<Event> nonNullIDEvents =
+                        elist.where((event) => event.id != null).toList();
+                    List<Event> nullIDEvents =
+                        elist.where((event) => event.id == null).toList();
+                    photo.label = labelController.text != ""
+                        ? labelController.text
+                        : null;
+                    DateTime currentDateTime = DateTime.now();
+                    String formattedDateTime = DateFormat("yyyy:MM:dd HH:mm:ss")
+                        .format(currentDateTime);
+                    //print(formattedDateTime);
+                    photo.last_modified_date = formattedDateTime;
+                    await DbHelper.instance.editPhotobyid(photo);
+
+                    if (nonNullIDEvents.length > 0) {
+                      await Event.updateEvents(nonNullIDEvents);
+                    }
+                    if (nullIDEvents.length > 0) {
+                      await Event.insertEvents(nullIDEvents, photo.id!);
+                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Data added successfully'),
+                      ),
+                    );
+                    setState(() {});
+                  }),
               SizedBox(
                 height: 20,
               ),
@@ -377,30 +430,34 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
     );
   }
 
-  addeditfunction() async {
-    List<Event> nonNullIDEvents =
-        elist.where((event) => event.id != null).toList();
-    List<Event> nullIDEvents =
-        elist.where((event) => event.id == null).toList();
-    photo.label = labelController.text != "" ? labelController.text : null;
-    DateTime currentDateTime = DateTime.now();
-    String formattedDateTime =
-        DateFormat("yyyy:MM:dd HH:mm:ss").format(currentDateTime);
-    //print(formattedDateTime);
-    photo.last_modified_date = formattedDateTime;
-    await DbHelper.instance.editPhotobyid(photo);
+  // addeditfunction(context) async {
+  //   List<Event> nonNullIDEvents =
+  //       elist.where((event) => event.id != null).toList();
+  //   List<Event> nullIDEvents =
+  //       elist.where((event) => event.id == null).toList();
+  //   photo.label = labelController.text != "" ? labelController.text : null;
+  //   DateTime currentDateTime = DateTime.now();
+  //   String formattedDateTime =
+  //       DateFormat("yyyy:MM:dd HH:mm:ss").format(currentDateTime);
+  //   //print(formattedDateTime);
+  //   photo.last_modified_date = formattedDateTime;
+  //   await DbHelper.instance.editPhotobyid(photo);
 
-    if (nonNullIDEvents.length > 0) {
-      Event.updateEvents(nonNullIDEvents);
-    }
-    if (nullIDEvents.length > 0) {
-      Event.insertEvents(nullIDEvents, photo.id!);
-    }
-
-    // await DbHelper.instance.inserteditPersonAndAlbumbyid(photo, plist);
-    // await DbHelper.instance.inserteditEventbyid(photo, elist, widget.album_id);
-    setState(() {});
-  }
+  //   if (nonNullIDEvents.length > 0) {
+  //     Event.updateEvents(nonNullIDEvents);
+  //   }
+  //   if (nullIDEvents.length > 0) {
+  //     Event.insertEvents(nullIDEvents, photo.id!);
+  //   }
+  //   // await DbHelper.instance.inserteditPersonAndAlbumbyid(photo, plist);
+  //   // await DbHelper.instance.inserteditEventbyid(photo, elist, widget.album_id);
+  //   // ScaffoldMessenger.of(context).showSnackBar(
+  //   //   SnackBar(
+  //   //     content: Text('Albums created successfully'),
+  //   //   ),
+  //   // );
+  //   setState(() {});
+  // }
 }
 
 
