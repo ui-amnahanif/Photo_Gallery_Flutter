@@ -92,8 +92,10 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                         color: Color.fromRGBO(181, 97, 251, 1.0)),
                     title: const Text('Take photo'),
                     onTap: () async {
-                      final status = await Permission.storage.request();
-                      if (await Permission.storage.isGranted) {
+                      await Permission.storage.request();
+                      final isPermissionGranted =
+                          await Permission.storage.isGranted;
+                      if (isPermissionGranted) {
                         final pickedFile = await picker.pickImage(
                           source: ImageSource.camera,
                         );
