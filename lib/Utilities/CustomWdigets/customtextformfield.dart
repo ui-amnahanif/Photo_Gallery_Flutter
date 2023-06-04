@@ -6,13 +6,10 @@ class CustomTextFormField extends StatefulWidget {
   double width;
   String? hintText;
   TextEditingController cont;
+  Function? onchanged;
 
   CustomTextFormField(
-    this.height,
-    this.width,
-    this.hintText,
-    this.cont,
-  );
+      this.height, this.width, this.hintText, this.cont, this.onchanged);
 
   @override
   State<CustomTextFormField> createState() => _CustomTextFormFieldState();
@@ -30,6 +27,9 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
           width: widget.width,
           height: widget.height,
           child: TextFormField(
+            onChanged: widget.onchanged != null
+                ? (value) => widget.onchanged!(value)
+                : null,
             style: TextStyle(fontSize: 18),
             cursorColor: primaryColor,
             textAlign: TextAlign.start,

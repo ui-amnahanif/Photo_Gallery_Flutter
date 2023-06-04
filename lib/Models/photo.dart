@@ -71,9 +71,9 @@ class Photo {
     List<Person> plist = await DbHelper.instance.getPersonDetailsByPhotoId(pid);
     List<Event> elist = await DbHelper.instance.getEventDetailsByPhotoId(pid);
     for (int i = 0; i < plist.length; i++) {
-      int photoEventCount =
+      int photoPersonCount =
           await DbHelper.instance.getPhotoPersonCountbyPersonId(plist[i].id!);
-      if (photoEventCount == 0) {
+      if (photoPersonCount == 0) {
         int affectedRows =
             await DbHelper.instance.deletePersonbyId(plist[i].id!);
       }

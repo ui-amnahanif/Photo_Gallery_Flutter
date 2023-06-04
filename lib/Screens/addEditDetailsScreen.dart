@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'package:contacts_service/contacts_service.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_gallery/Models/event.dart';
 import 'package:photo_gallery/Models/person.dart';
 import 'package:photo_gallery/Models/photo.dart';
@@ -30,6 +32,8 @@ class AddEditDetailsScreen extends StatefulWidget {
 
 class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
   Photo photo = Photo();
+  List<Contact> _contacts = [];
+  List<Contact> _filteredContacts = [];
   List<Person> plist = [];
   List<Event> elist = [];
   List<String> oldPersonsNames = [];
@@ -128,6 +132,43 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
     setState(() {});
   }
 
+  _getPermisionsData() async {
+    bool isAllowed = await _getPermisions();
+    if (isAllowed) {
+      _getContacts();
+    }
+  }
+
+  Future<bool> _getPermisions() async {
+    PermissionStatus permissionStatus = await Permission.contacts.status;
+    if (permissionStatus.isGranted) {
+      return true;
+    } else {
+      permissionStatus = await Permission.contacts.request();
+      if (permissionStatus.isGranted) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+
+  Future<void> _getContacts() async {
+    final contacts = await ContactsService.getContacts();
+    setState(() {
+      _contacts = contacts.toList();
+    });
+  }
+
+  void _onSearchTextChanged(String searchText) {
+    _filteredContacts = _contacts.where((contact) {
+      return contact.displayName!
+          .toLowerCase()
+          .contains(searchText.toLowerCase());
+    }).toList();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     height = MediaQuery.of(context).size.height;
@@ -151,6 +192,7 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
                       width! * 0.75,
                       "",
                       peopleController,
+                      _onSearchTextChanged,
                     ),
                   ),
                   TextButton(
@@ -192,6 +234,30 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
                             ),
                   )
                 ],
+              ),
+              Container(
+                height: peopleController.text != "" ? 500 : 0,
+                width: width! * 0.75,
+                child: ListView.builder(
+                  itemCount: _filteredContacts.length,
+                  itemBuilder: (context, index) {
+                    final contact = _filteredContacts[index];
+                    return ListTile(
+                      title: Text(contact.displayName!),
+                      subtitle: Text(contact.phones!.first.value!),
+                      leading: CircleAvatar(
+                        child: Text(contact.initials()),
+                      ),
+                      onTap: () {
+                        peopleController.text =
+                            _filteredContacts[index].displayName!;
+                        print(_filteredContacts[index].displayName);
+                        _filteredContacts.clear();
+                        setState(() {});
+                      },
+                    );
+                  },
+                ),
               ),
               plist.length >= 1
                   ? ListView.builder(
@@ -239,12 +305,8 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: CustomTextFormField(
-                      height! * 0.052,
-                      width! * 0.75,
-                      "",
-                      eventController,
-                    ),
+                    child: CustomTextFormField(height! * 0.052, width! * 0.75,
+                        "", eventController, null),
                   ),
                   TextButton(
                     onPressed: () {
@@ -311,11 +373,7 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
               Align(
                 alignment: Alignment(-0.6, 0.0),
                 child: CustomTextFormField(
-                  height! * 0.052,
-                  width! * 0.90,
-                  "",
-                  labelController,
-                ),
+                    height! * 0.052, width! * 0.90, "", labelController, null),
               ),
               CustomText("Location", 10, null, FontWeight.w500, 0.1),
               // Align(
