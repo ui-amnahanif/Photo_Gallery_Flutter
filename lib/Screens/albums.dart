@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:native_exif/native_exif.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -218,6 +219,11 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     p.path = ImagePath;
     p.title = title;
     p.isSynced = 0;
+    DateTime currentDateTime = DateTime.now();
+    String formattedDateTime =
+        DateFormat("yyyy:MM:dd HH:mm:ss").format(currentDateTime);
+    //print(formattedDateTime);
+    p.last_modified_date = formattedDateTime;
     List<String> people = [];
     final exif = await Exif.fromPath(ImagePath);
     final latlng = await exif.getLatLong();

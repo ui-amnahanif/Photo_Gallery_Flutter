@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:photo_gallery/DBHelper/dbhelper.dart';
 import 'package:photo_gallery/Models/event.dart';
 import 'package:photo_gallery/Models/person.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
+import 'package:path/path.dart' as pathh;
 
 class Photo {
   int? id;
@@ -177,9 +180,9 @@ class Photo {
     for (int i = 0; i < plist.length; i++) {
       map = Map<String, dynamic>();
       map["title"] = plist[i].title;
-      map["lat"] = plist[i].lat;
-      map["lng"] = plist[i].lng;
-      map["label"] = plist[i].label;
+      map["lat"] = plist[i].lat ?? 0.0;
+      map["lng"] = plist[i].lng ?? 0.0;
+      map["label"] = plist[i].label ?? "";
       map["date_taken"] = plist[i].date_taken;
       map["last_modified_date"] = plist[i].last_modified_date;
       map["people"] = [];
@@ -212,6 +215,51 @@ class Photo {
         body: json,
         headers: <String, String>{'Content-Type': 'application/json'});
     if (response.statusCode == 200) {
+      var jsonResponse = jsonDecode(response.body);
+      // Use jsonResponse object to access the returned data
+      print(jsonResponse);
+      // List<Photo> plist = getPhotoListFromJson(jsonResponse);
+      Photo p;
+      List<Person> plist = [];
+      List<Event> elist = [];
+      Person per;
+      Event e;
+      for (int i = 0; i < jsonResponse.length; i++) {
+        if (jsonResponse[i]["isSynced"] == 0) {
+          String url = '${ip}/images/${jsonResponse[i]["title"]}';
+          String path = await downloadFile(url);
+          p = Photo();
+          p.path = path;
+          p.title = jsonResponse[i]["title"];
+          p.label = jsonResponse[i]["label"];
+          p.lat = jsonResponse[i]["lat"] != 0.0 ? jsonResponse[i]["lat"] : null;
+          p.lng = jsonResponse[i]["lng"] != 0.0 ? jsonResponse[i]["lng"] : null;
+          p.date_taken = jsonResponse[i]["date_taken"];
+          p.last_modified_date = jsonResponse[i]["last_modified_date"];
+          p.isSynced = 1;
+          List<dynamic> peopleList = jsonResponse[i]['people'];
+
+          for (var pers in peopleList) {
+            plist = [];
+            print(pers);
+            per = Person();
+            per.name = pers.toString();
+            plist.add(per);
+          }
+          List<dynamic> eventList = jsonResponse[i]['events'];
+
+          for (var eve in eventList) {
+            elist = [];
+            print(eve);
+            e = Event();
+            e.name = eve.toString();
+            elist.add(e);
+          }
+          int photoId = await DbHelper.instance.insertPhoto(p);
+          await Person.insertPersons(plist, photoId);
+          await Event.insertEvents(elist, photoId);
+        }
+      }
       return true;
     } else {
       return false;
@@ -225,7 +273,47 @@ class Photo {
     for (int i = 0; i < eventPhotoList.length; i++) {
       eventPhotoList[i].lat = lat;
       eventPhotoList[i].lng = lng;
+      //changing last modified date as well
+      DateTime currentDateTime = DateTime.now();
+      String formattedDateTime =
+          DateFormat("yyyy:MM:dd HH:mm:ss").format(currentDateTime);
+      //print(formattedDateTime);
+      eventPhotoList[i].last_modified_date = formattedDateTime;
       await DbHelper.instance.editPhotobyid(eventPhotoList[i]);
     }
+  }
+
+  static List<Photo> getPhotoListFromJson(var jsonData) {
+    List<Photo> plist = [];
+
+    for (int i = 0; i < jsonData.length; i++) {
+      Photo p = Photo.fromMap(jsonData[i]);
+      plist.add(p);
+    }
+    return plist;
+  }
+
+  static Future<String> downloadFile(String url) async {
+    // Get the filename from the URL.
+    final filename = pathh.basename(url);
+
+    // Get a reference to the directory where images are stored.
+    final Directory? appDir = await getExternalStorageDirectory();
+    final String imagesDir = pathh.join(appDir!.path, 'images');
+
+    // Create the directory if it doesn't exist.
+    if (!Directory(imagesDir).existsSync()) {
+      Directory(imagesDir).createSync(recursive: true);
+    }
+
+    // Send the HTTP request to download the file.
+    final response = await http.get(Uri.parse(url));
+
+    // Write the file to disk.
+    final file = File('$imagesDir/$filename');
+    await file.writeAsBytes(response.bodyBytes);
+
+    print('File downloaded and saved to: ${file.path}');
+    return file.path;
   }
 }
