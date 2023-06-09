@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
+import 'dart:ui' as ui;
 import 'package:image_picker/image_picker.dart';
 import 'package:native_exif/native_exif.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,9 +12,12 @@ import 'package:photo_gallery/Models/album.dart';
 import 'package:photo_gallery/Models/person.dart';
 import 'package:photo_gallery/Models/photo.dart';
 import 'package:photo_gallery/Screens/albumsOfAlbums.dart';
+import 'package:photo_gallery/Screens/editeventalbums.dart';
 import 'package:photo_gallery/Utilities/CustomWdigets/customalbum.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
 import 'package:path/path.dart' as path;
+
+import '../Models/event.dart';
 
 class AlbummsScreen extends StatefulWidget {
   @override
@@ -509,6 +514,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     );
   }
 
+  Offset? pos;
   Widget eventAlbums() {
     return Container(
       padding: EdgeInsets.only(top: 15),
@@ -517,6 +523,22 @@ class _AlbummsScreenState extends State<AlbummsScreen>
         children: [
           ...eventAlbumsList.map(
             (e) => GestureDetector(
+              // onLongPressStart: (LongPressStartDetails details) {
+              //   print(
+              //       details.localPosition); // Gives you the position of the tap
+              //   final tapPosition = details.globalPosition;
+              //   _showPopupMenu(context, tapPosition);
+              // },
+              onTapDown: (position) => {
+                pos = _getTapPosition(position) /* get screen tap position */
+              },
+              onLongPress: () async {
+                Event eve = new Event();
+                eve.name = e.title;
+                eve.id = e.id;
+                _showContextMenu(context, pos!, eve); /* action on long press */
+              },
+
               onTap: () async {
                 List<Photo> plistToPass =
                     await DbHelper.instance.getPhotosofEventById(e.id!);
@@ -628,4 +650,99 @@ class _AlbummsScreenState extends State<AlbummsScreen>
       ),
     );
   }
+
+  Offset _getTapPosition(TapDownDetails tapPosition) {
+    final RenderBox referenceBox = context.findRenderObject() as RenderBox;
+
+    Offset _tapPosition = referenceBox.globalToLocal(
+        tapPosition.globalPosition); // store the tap positon in offset variable
+    print(_tapPosition);
+
+    return _tapPosition;
+  }
+
+  void _showContextMenu(
+      BuildContext context, Offset _tapPosition, Event e) async {
+    final RenderObject? overlay =
+        Overlay.of(context).context.findRenderObject();
+
+    final result = await showMenu(
+        context: context,
+        position: RelativeRect.fromRect(
+            Rect.fromLTWH(_tapPosition.dx, _tapPosition.dy, 100, 100),
+            Rect.fromLTWH(0, 0, overlay!.paintBounds.size.width,
+                overlay.paintBounds.size.height)),
+        items: [
+          const PopupMenuItem(
+            child: Text('edit'),
+            value: "edit",
+          ),
+        ]);
+    // perform action on selected menu item
+    switch (result) {
+      case 'edit':
+        print("edit");
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return EditEventAlbum(e);
+            },
+          ),
+        );
+        getAllAlbums();
+        break;
+    }
+  }
+  // void _showPopupMenu(BuildContext context) async {
+  //   // Display popup menu
+  //   final result = await showMenu(
+  //     context: context,
+  //     position: RelativeRect.fromLTRB(1000.0, 0.0, 0.0, 0.0),
+  //     items: [
+  //       PopupMenuItem(value: 1, child: Text('Option 1')),
+  //       PopupMenuItem(value: 2, child: Text('Option 2')),
+  //       PopupMenuItem(value: 3, child: Text('Option 3')),
+  //     ],
+  //   );
+
+  //   // Handle popup menu selection
+  //   switch (result) {
+  //     case 1:
+  //       // Do something for option 1
+  //       break;
+  //     case 2:
+  //       // Do something for option 2
+  //       break;
+  //     case 3:
+  //       // Do something for option 3
+  //       break;
+  //   }
+  // }
+
+  // void _showPopupMenu(BuildContext context, Offset tapPosition) async {
+  //   // Display popup menu
+  //   final result = await showMenu(
+  //     context: context,
+  //     position: RelativeRect.fromLTRB(tapPosition.dx, tapPosition.dy, 0, 0),
+  //     items: [
+  //       PopupMenuItem(value: 1, child: Text('Option 1')),
+  //       PopupMenuItem(value: 2, child: Text('Option 2')),
+  //       PopupMenuItem(value: 3, child: Text('Option 3')),
+  //     ],
+  //   );
+
+  //   // Handle popup menu selection
+  //   switch (result) {
+  //     case 1:
+  //       // Do something for option 1
+  //       break;
+  //     case 2:
+  //       // Do something for option 2
+  //       break;
+  //     case 3:
+  //       // Do something for option 3
+  //       break;
+  //   }
+  // }
 }

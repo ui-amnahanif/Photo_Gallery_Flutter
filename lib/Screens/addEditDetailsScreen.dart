@@ -60,6 +60,7 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
   void initState() {
     // TODO: implement initState
     getPeopleEventDetails();
+    _getPermisionsData();
   }
 
   getCurrentLatLng() {
@@ -236,7 +237,7 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
                 ],
               ),
               Container(
-                height: peopleController.text != "" ? 500 : 0,
+                height: _filteredContacts.length != 0 ? 200 : 0,
                 width: width! * 0.75,
                 child: ListView.builder(
                   itemCount: _filteredContacts.length,

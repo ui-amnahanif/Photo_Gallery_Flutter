@@ -63,13 +63,13 @@ class Photo {
   }
 
   static Future<void> deletePhoto(int pid) async {
+    List<Person> plist = await DbHelper.instance.getPersonDetailsByPhotoId(pid);
+    List<Event> elist = await DbHelper.instance.getEventDetailsByPhotoId(pid);
     int affectedPhotoRows = await DbHelper.instance.deletePhotobyId(pid);
     int affectedPhotoPersonRows =
         await DbHelper.instance.deletePhotoPersonByPhotoId(pid);
     int affectedPhotoEventRows =
         await DbHelper.instance.deletePhotoEventByPhotoId(pid);
-    List<Person> plist = await DbHelper.instance.getPersonDetailsByPhotoId(pid);
-    List<Event> elist = await DbHelper.instance.getEventDetailsByPhotoId(pid);
     for (int i = 0; i < plist.length; i++) {
       int photoPersonCount =
           await DbHelper.instance.getPhotoPersonCountbyPersonId(plist[i].id!);
@@ -215,6 +215,17 @@ class Photo {
       return true;
     } else {
       return false;
+    }
+  }
+
+  static void updatePicturesLocationByEventId(
+      int id, double lat, double lng) async {
+    List<Photo> eventPhotoList =
+        await DbHelper.instance.getPhotosofEventById(id);
+    for (int i = 0; i < eventPhotoList.length; i++) {
+      eventPhotoList[i].lat = lat;
+      eventPhotoList[i].lng = lng;
+      await DbHelper.instance.editPhotobyid(eventPhotoList[i]);
     }
   }
 }

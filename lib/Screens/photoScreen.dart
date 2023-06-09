@@ -73,10 +73,34 @@ class _PhotoScreenState extends State<PhotoScreen> {
   SelectedItem(BuildContext context, int item) async {
     switch (item) {
       case 0:
-        await Photo.deletePhoto(widget.photo.id!);
-        Navigator.pop(context, true);
-        print("Delete");
+        showDialog(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+            title: Text("Delete?"),
+            content: Text("Are you sure you want to delete?"),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  // Code to delete
+                  await Photo.deletePhoto(widget.photo.id!);
+                  Navigator.pop(context, true);
+                  Navigator.pop(context, true);
+                  print("Delete");
+                },
+                child: Text("Yes"),
+              ),
+              TextButton(
+                onPressed: () {
+                  // Code to cancel
+                  Navigator.of(context).pop(false);
+                },
+                child: Text("No"),
+              ),
+            ],
+          ),
+        );
         break;
+
       case 1:
         Navigator.push(context, MaterialPageRoute(builder: (context) {
           return viewDetailsScreen(widget.photo.id!);
