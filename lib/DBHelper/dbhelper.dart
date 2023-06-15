@@ -221,6 +221,18 @@ class DbHelper {
     return label_list;
   }
 
+  Future<List<String>> getAllLocations() async {
+    List<String> places = [];
+    List<Photo> plist = await getAllPhotoHavingLatLng();
+    for (int i = 0; i < plist.length; i++) {
+      String p = await getCityFromLatLong(plist[i].lat!, plist[i].lng!);
+      if (!places.contains(p)) {
+        places.add(p); //do mot add repeated places
+      }
+    }
+    return places;
+  }
+
   Future<List<Album>> getEventAlbums() async {
     List<Event> event_list = [];
     List<Album> album_list = [];
@@ -386,6 +398,14 @@ class DbHelper {
     Database db = await instance.database;
     List<Map<String, dynamic>> data =
         await db.query("Photo", where: "id=?", whereArgs: [id]);
+    Photo p = Photo.fromMap(data[0]);
+    return p;
+  }
+
+  Future<Photo> getPhotoByTitle(String title) async {
+    Database db = await instance.database;
+    List<Map<String, dynamic>> data =
+        await db.query("Photo", where: "title=?", whereArgs: [title]);
     Photo p = Photo.fromMap(data[0]);
     return p;
   }
@@ -657,6 +677,13 @@ class DbHelper {
     return affectedRows;
   }
 
+  Future<String> updateIsSyncedTo1() async {
+    Database db = await instance.database;
+    String query = "update photo set isSynced = 1";
+    await db.rawUpdate(query);
+    return "updated";
+  }
+
   Future<int> insertEvent(Event e) async {
     Database db = await instance.database;
     int id = await db.insert("Event", e.toMap());
@@ -703,15 +730,16 @@ class DbHelper {
     return p;
   }
 
-  Future<Map<String, dynamic>> getDistinctLocationAndTheirPhotos() async {
+  Future<List<Map<String, dynamic>>> getDistinctLocationAndTheirPhotos() async {
     List<String> places = [];
     List<Photo> plist = await getAllPhotoHavingLatLng();
-    Map<String, dynamic> locationPhotoMap = Map<String, dynamic>();
+    List<Map<String, dynamic>> locationPhotoMap = [];
     for (int i = 0; i < plist.length; i++) {
       String p = await getCityFromLatLong(plist[i].lat!, plist[i].lng!);
       if (!places.contains(p)) {
-        locationPhotoMap = Map<String, dynamic>();
-        locationPhotoMap[p] = plist[i];
+        Map<String, dynamic> map = Map();
+        map[p] = plist[i];
+        locationPhotoMap.add(map);
         places.add(p); //do mot add repeated places
       }
     }
@@ -741,9 +769,15 @@ class DbHelper {
     String query =
         "SELECT DISTINCT SUBSTR(date_taken, 1, 10) AS distinct_date FROM photo;";
     List<Map<String, dynamic>> distict_dates = await db.rawQuery(query);
-    for (int i = 0; i < distict_dates.length; i++) {
+    List<Map<String, dynamic>> sortedDates =
+        List<Map<String, dynamic>>.from(distict_dates);
+
+// Sorting the new list by date values in ascending order
+    sortedDates
+        .sort((a, b) => b["distinct_date"].compareTo(a["distinct_date"]));
+    for (int i = 0; i < sortedDates.length; i++) {
       String query =
-          "SELECT * from photo where SUBSTR(date_taken, 1, 10) like '${distict_dates[i]["distinct_date"]}' limit 1;";
+          "SELECT * from photo where SUBSTR(date_taken, 1, 10) like '${sortedDates[i]["distinct_date"]}' limit 1;";
       List<Map<String, dynamic>> data1 = await db.rawQuery(query);
       if (data1.length >= 1) {
         plist.add(Photo.fromMap(data1[0]));
@@ -849,6 +883,14 @@ class DbHelper {
     return int.parse(data[0]["event_count"].toString());
   }
 
+  Future<int> getPhotoPersonCountbyPersonId(int person_id) async {
+    Database db = await instance.database;
+    String query =
+        'SELECT COUNT(*) AS person_count FROM photoPerson WHERE person_id = ${person_id};';
+    List<Map<String, dynamic>> data = await db.rawQuery(query);
+    return int.parse(data[0]["person_count"].toString());
+  }
+
   Future<int> deleteEventbyId(int id) async {
     Database db = await instance.database;
     int affectedRows = await db.delete('Event', where: 'id=?', whereArgs: [id]);
@@ -882,13 +924,13 @@ class DbHelper {
     return affectedRows;
   }
 
-  Future<int> getPhotoPersonCountbyPersonId(int person_id) async {
-    Database db = await instance.database;
-    String query =
-        'SELECT COUNT(*) AS person_count FROM photoPerson WHERE person_id = ${person_id};';
-    List<Map<String, dynamic>> data = await db.rawQuery(query);
-    return int.parse(data[0]["person_count"].toString());
-  }
+  // Future<int> getPhotoPersonCountbyPersonId(int person_id) async {
+  //   Database db = await instance.database;
+  //   String query =
+  //       'SELECT COUNT(*) AS person_count FROM photoPerson WHERE person_id = ${person_id};';
+  //   List<Map<String, dynamic>> data = await db.rawQuery(query);
+  //   return int.parse(data[0]["person_count"].toString());
+  // }
 
   Future<List<Person>> getAllPersonsByPhotoId(int pid) async {
     Database db = await instance.database;
@@ -912,5 +954,86 @@ class DbHelper {
       elist.add(Event.fromMap(data[i]));
     }
     return elist;
+  }
+
+////////////////          Functions For Searching             ///////////////////
+  Future<List<Photo>> getPhotosofPersons(List<Person> personsList) async {
+    Database db = await instance.database;
+    List<Photo> plist = [];
+    // Build the query based on the input names
+    // String query = '''
+    //   SELECT * FROM Photo
+    //   INNER JOIN photoperson ON Photo.id= photoperson.photo_id
+    //   WHERE photoperson.person_id IN (${personsList.map((n) => "'${n.id}'").join(',')})
+    // ''';
+
+    String query = '''
+    SELECT *
+    FROM Photo
+    INNER JOIN photoperson ON Photo.id= photoperson.photo_id 
+    WHERE 1=1 ${personsList.map((n) => 'AND photoperson.person_id = ${n.id}').join()}
+''';
+    List<Map<String, dynamic>> personsPhotos = await db.rawQuery(query);
+    for (int i = 0; i < personsPhotos.length; i++) {
+      plist.add(Photo.fromMap(personsPhotos[i]));
+    }
+    return plist;
+  }
+
+  Future<List<Photo>> getPhotosofEvents(List<Event> eventsList) async {
+    Database db = await instance.database;
+    List<Photo> plist = [];
+    // Build the query based on the input names
+    String query = '''
+      SELECT * FROM Photo
+      INNER JOIN photoevent ON Photo.id= photoevent.photo_id 
+      WHERE photoevent.event_id IN (${eventsList.map((n) => "'${n.id}'").join(',')})
+    ''';
+    List<Map<String, dynamic>> eventsPhotos = await db.rawQuery(query);
+    for (int i = 0; i < eventsPhotos.length; i++) {
+      plist.add(Photo.fromMap(eventsPhotos[i]));
+    }
+    return plist;
+  }
+
+  Future<List<Photo>> getPhotosofLabels(List<String> labelsList) async {
+    Database db = await instance.database;
+    List<Photo> plist = [];
+    // Build the query based on the input names
+    String query = '''
+      SELECT * FROM Photo where label IN (${labelsList.map((n) => "'n'").join(',')})
+    ''';
+    List<Map<String, dynamic>> labelsPhotos = await db.rawQuery(query);
+    for (int i = 0; i < labelsPhotos.length; i++) {
+      plist.add(Photo.fromMap(labelsPhotos[i]));
+    }
+    return plist;
+  }
+
+  Future<List<Photo>> getPhotosofDate(String date) async {
+    Database db = await instance.database;
+    List<Photo> plist = [];
+    // Build the query based on the input names
+    String query = '''
+      SELECT * FROM Photo where SUBSTR(date_taken, 1, 10) like $date
+    ''';
+    List<Map<String, dynamic>> datePhotos = await db.rawQuery(query);
+    for (int i = 0; i < datePhotos.length; i++) {
+      plist.add(Photo.fromMap(datePhotos[i]));
+    }
+    return plist;
+  }
+
+  Future<List<Photo>> getPhotosofLocation(List<String> locationList) async {
+    List<String> places = [];
+    List<Photo> photosList = [];
+    List<Photo> plist = await getAllPhotoHavingLatLng();
+    for (int i = 0; i < plist.length; i++) {
+      String p = await getCityFromLatLong(plist[i].lat!, plist[i].lng!);
+      if (locationList.contains(p)) {
+        photosList.add(plist[i]);
+      }
+    }
+    return photosList;
   }
 }

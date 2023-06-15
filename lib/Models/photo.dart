@@ -215,6 +215,8 @@ class Photo {
         body: json,
         headers: <String, String>{'Content-Type': 'application/json'});
     if (response.statusCode == 200) {
+      //change all photos synced to 1
+      DbHelper.instance.updateIsSyncedTo1();
       var jsonResponse = jsonDecode(response.body);
       // Use jsonResponse object to access the returned data
       print(jsonResponse);
@@ -258,6 +260,61 @@ class Photo {
           int photoId = await DbHelper.instance.insertPhoto(p);
           await Person.insertPersons(plist, photoId);
           await Event.insertEvents(elist, photoId);
+        } else {
+          //get photo detail by title
+          Photo photoDetail =
+              await DbHelper.instance.getPhotoByTitle(jsonResponse[i]["title"]);
+          //compare dates
+          String compare = compareDates(jsonResponse[i]["last_modified_date"],
+              photoDetail.last_modified_date!);
+          //if windows date greater
+          if (compare == "date1") {
+            //get all events
+            List<Event> eventsList =
+                await DbHelper.instance.getAllEventsByPhotoId(photoDetail.id!);
+            //get all persons
+            List<Person> personsList =
+                await DbHelper.instance.getAllPersonsByPhotoId(photoDetail.id!);
+            //delete all photo person links
+            for (int j = 0; j < personsList.length; j++) {
+              Person.deletePerson(personsList[j].id!, photoDetail.id!);
+            }
+            //delete all photo events links
+            for (int j = 0; j < eventsList.length; j++) {
+              Event.deleteEvent(eventsList[j].id!, photoDetail.id!);
+            }
+            //insert persons
+            List<dynamic> peopleList = jsonResponse[i]['people'];
+
+            for (var pers in peopleList) {
+              plist = [];
+              print(pers);
+              per = Person();
+              per.name = pers.toString();
+              plist.add(per);
+            }
+            await Person.insertPersons(plist, photoDetail.id!);
+
+            //insert events
+            List<dynamic> eventList = jsonResponse[i]['events'];
+
+            for (var eve in eventList) {
+              elist = [];
+              print(eve);
+              e = Event();
+              e.name = eve.toString();
+              elist.add(e);
+            }
+            await Event.insertEvents(elist, photoDetail.id!);
+            //update photo
+            photoDetail.label = jsonResponse[i]["label"];
+            photoDetail.date_taken = jsonResponse[i]["date_taken"];
+            photoDetail.last_modified_date =
+                jsonResponse[i]["last_modified_date"];
+            photoDetail.lat = jsonResponse[i]["lat"];
+            photoDetail.lng = jsonResponse[i]["lng"];
+            await DbHelper.instance.editPhotobyid(photoDetail);
+          }
         }
       }
       return true;
@@ -315,5 +372,51 @@ class Photo {
 
     print('File downloaded and saved to: ${file.path}');
     return file.path;
+  }
+
+  static String compareDates(String date1, String date2) {
+    DateTime dateTime1 = DateTime.parse(
+        date1.replaceAll(':', '-').substring(0, 10) +
+            ' ' +
+            date1.substring(11));
+    DateTime dateTime2 = DateTime.parse(
+        date2.replaceAll(':', '-').substring(0, 10) +
+            ' ' +
+            date2.substring(11));
+
+// Compare the dates
+    int dateComparison = dateTime1.compareTo(dateTime2);
+    if (dateComparison > 0) {
+      print('dateTime1 is greater');
+      return "date1";
+    } else if (dateComparison < 0) {
+      print('dateTime2 is greater');
+      return "date2";
+    } else {
+      // Dates are the same, compare the times
+      if (dateTime1.timeZoneOffset.inHours > dateTime2.timeZoneOffset.inHours) {
+        print('dateTime1 is greater');
+        return "date1";
+      } else if (dateTime1.timeZoneOffset.inHours <
+          dateTime2.timeZoneOffset.inHours) {
+        print('dateTime2 is greater');
+        return "date2";
+      } else if (dateTime1.minute > dateTime2.minute) {
+        print('dateTime1 is greater');
+        return "date1";
+      } else if (dateTime1.minute < dateTime2.minute) {
+        print('dateTime2 is greater');
+        return "date2";
+      } else if (dateTime1.second > dateTime2.second) {
+        print('dateTime1 is greater');
+        return "date1";
+      } else if (dateTime1.second < dateTime2.second) {
+        print('dateTime2 is greater');
+        return "date2";
+      } else {
+        print('Both DateTimes are the same');
+        return "same";
+      }
+    }
   }
 }

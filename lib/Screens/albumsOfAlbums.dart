@@ -224,7 +224,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
     return Container(
       padding: EdgeInsets.only(top: 15),
       child: GridView.count(
-        crossAxisCount: 3,
+        crossAxisCount: 2,
         children: [
           ...peopleAlbumsList.map(
             (e) => GestureDetector(
@@ -241,8 +241,8 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                 }));
                 getAllAlbums();
               },
-              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
-                  width! * 0.3), //85 100
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
+                  width! * 0.45), //85 100
             ),
           ),
         ],
@@ -254,7 +254,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
     return Container(
       padding: EdgeInsets.only(top: 15),
       child: GridView.count(
-        crossAxisCount: 3,
+        crossAxisCount: 2,
         children: [
           ...eventAlbumsList.map(
             (e) => GestureDetector(
@@ -271,8 +271,8 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                 }));
                 getAllAlbums();
               },
-              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
-                  width! * 0.3), //85 100
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
+                  width! * 0.45), //85 100
             ),
           ),
         ],
@@ -284,7 +284,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
     return Container(
       padding: EdgeInsets.only(top: 15),
       child: GridView.count(
-        crossAxisCount: 3,
+        crossAxisCount: 2,
         children: [
           ...labelAlbumsList.map(
             (e) => GestureDetector(
@@ -301,8 +301,8 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                 }));
                 getAllAlbums();
               },
-              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
-                  width! * 0.3), //85 100
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
+                  width! * 0.45), //85 100
             ),
           ),
         ],
@@ -314,7 +314,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
     return Container(
       padding: EdgeInsets.only(top: 15),
       child: GridView.count(
-        crossAxisCount: 3,
+        crossAxisCount: 2,
         children: [
           ...locationAlbumsList.map(
             (e) => GestureDetector(
@@ -331,8 +331,8 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                 }));
                 getAllAlbums();
               },
-              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
-                  width! * 0.3), //85 100
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
+                  width! * 0.45), //85 100
             ),
           ),
         ],
@@ -344,7 +344,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
     return Container(
       padding: EdgeInsets.only(top: 15),
       child: GridView.count(
-        crossAxisCount: 3,
+        crossAxisCount: 2,
         children: [
           ...dateAlbumsList.map(
             (e) => GestureDetector(
@@ -362,8 +362,8 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                 getAllAlbums();
               },
 
-              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
-                  width! * 0.3), //85 100
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
+                  width! * 0.45), //85 100
             ),
           ),
         ],

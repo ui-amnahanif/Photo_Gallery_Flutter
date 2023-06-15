@@ -231,6 +231,8 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     if (!data.isEmpty) {
       if (data.containsKey("DateTimeOriginal")) {
         p.date_taken = data["DateTimeOriginal"].toString();
+      } else {
+        p.date_taken = "2023:06:14 14:57:20";
       }
       if (data.containsKey("GPSLatitude")) {
         p.lat = double.parse(data["GPSLatitude"].toString());
@@ -483,7 +485,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
       child: Container(
         padding: EdgeInsets.only(top: 15),
         child: GridView.count(
-          crossAxisCount: scaleFactor == 1.0 ? 3 : 2,
+          crossAxisCount: 2, //scaleFactor == 1.0 ? 3 : 2,
           children: [
             ...peopleAlbumsList.map(
               (e) => GestureDetector(
@@ -510,8 +512,8 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                   }));
                   getAllAlbums();
                 },
-                child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
-                    width! * 0.3), //85 100
+                child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
+                    width! * 0.45), //85 100
               ),
             ),
           ],
@@ -525,7 +527,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     return Container(
       padding: EdgeInsets.only(top: 15),
       child: GridView.count(
-        crossAxisCount: 3,
+        crossAxisCount: 2,
         children: [
           ...eventAlbumsList.map(
             (e) => GestureDetector(
@@ -558,8 +560,8 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 }));
                 getAllAlbums();
               },
-              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
-                  width! * 0.3), //85 100
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
+                  width! * 0.45), //85 100 //0.11 //0.3
             ),
           ),
         ],
@@ -571,7 +573,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     return Container(
       padding: EdgeInsets.only(top: 15),
       child: GridView.count(
-        crossAxisCount: 3,
+        crossAxisCount: 2,
         children: [
           ...labelAlbumsList.map(
             (e) => GestureDetector(
@@ -588,8 +590,8 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 }));
                 getAllAlbums();
               },
-              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
-                  width! * 0.3), //85 100
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
+                  width! * 0.45), //85 100
             ),
           ),
         ],
@@ -601,7 +603,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     return Container(
       padding: EdgeInsets.only(top: 15),
       child: GridView.count(
-        crossAxisCount: 3,
+        crossAxisCount: 2,
         children: [
           ...locationAlbumsList.map(
             (e) => GestureDetector(
@@ -618,8 +620,8 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 }));
                 getAllAlbums();
               },
-              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
-                  width! * 0.3), //85 100
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
+                  width! * 0.45), //85 100
             ),
           ),
         ],
@@ -631,7 +633,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
     return Container(
       padding: EdgeInsets.only(top: 15),
       child: GridView.count(
-        crossAxisCount: 3,
+        crossAxisCount: 2,
         children: [
           ...dateAlbumsList.map(
             (e) => GestureDetector(
@@ -648,8 +650,8 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 }));
                 getAllAlbums();
               },
-              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.11,
-                  width! * 0.3), //85 100
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
+                  width! * 0.45), //85 100
             ),
           ),
         ],

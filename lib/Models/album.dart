@@ -83,10 +83,20 @@ class Album {
   static Future<List<Album>> getAllLocationAlbums() async {
     List<Album> alist = [];
     Album a;
-    Map<String, dynamic> locationPhoto =
+    List<Map<String, dynamic>> locationPhoto =
         await DbHelper.instance.getDistinctLocationAndTheirPhotos();
-    List<String> locations = locationPhoto.keys.toList();
-    List<Photo> photos = locationPhoto.values.map((e) => e as Photo).toList();
+    List<String> locations = [];
+    List<Photo> photos = [];
+    locationPhoto.forEach((map) {
+      map.forEach((key, value) {
+        if (key is String && value is Photo) {
+          locations.add(key);
+          photos.add(value);
+        }
+      });
+    });
+    // List<String> locations = locationPhoto.keys.toList();
+    // List<Photo> photos = locationPhoto.values.map((e) => e as Photo).toList();
     for (int i = 0; i < locations.length; i++) {
       a = Album();
       a.id = photos[i].id;
@@ -228,6 +238,9 @@ class Album {
       }
     }
     List<String> distinctDatesList = distinctDatesSet.toList();
+    // Sorting the list of date strings in descending order
+    distinctDatesList.sort((a, b) => b.compareTo(a));
+
     for (int i = 0; i < distinctDatesList.length; i++) {
       a = Album();
       Photo p = plist.firstWhere((photo) =>

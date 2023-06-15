@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:photo_gallery/Models/customcontact.dart';
 import 'package:photo_gallery/Models/event.dart';
 import 'package:photo_gallery/Models/person.dart';
 import 'package:photo_gallery/Models/photo.dart';
@@ -33,6 +34,8 @@ class AddEditDetailsScreen extends StatefulWidget {
 class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
   Photo photo = Photo();
   List<Contact> _contacts = [];
+  List<CustomContact> custom_contacts = [];
+  List<CustomContact> filtered_custom_contacts = [];
   List<Contact> _filteredContacts = [];
   List<Person> plist = [];
   List<Event> elist = [];
@@ -156,16 +159,30 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
 
   Future<void> _getContacts() async {
     final contacts = await ContactsService.getContacts();
+    CustomContact c;
+    Set<String> uniquenames = Set();
+    for (int i = 0; i < contacts.length; i++) {
+      if (!uniquenames.contains(contacts[i].displayName)) {
+        uniquenames.add(contacts[i].displayName!);
+        c = CustomContact(
+            name: contacts[i].displayName!,
+            phoneNumber: contacts[i].phones![0].value!);
+        custom_contacts.add(c);
+      }
+    }
     setState(() {
       _contacts = contacts.toList();
     });
   }
 
   void _onSearchTextChanged(String searchText) {
-    _filteredContacts = _contacts.where((contact) {
-      return contact.displayName!
-          .toLowerCase()
-          .contains(searchText.toLowerCase());
+    // _filteredContacts = _contacts.where((contact) {
+    //   return contact.displayName!
+    //       .toLowerCase()
+    //       .contains(searchText.toLowerCase());
+    // }).toList();
+    filtered_custom_contacts = custom_contacts.where((element) {
+      return element.name.toLowerCase().contains(searchText.toLowerCase());
     }).toList();
     setState(() {});
   }
@@ -237,23 +254,23 @@ class _AddEditDetailsScreenState extends State<AddEditDetailsScreen> {
                 ],
               ),
               Container(
-                height: _filteredContacts.length != 0 ? 200 : 0,
+                height: filtered_custom_contacts.length != 0 ? 200 : 0,
                 width: width! * 0.75,
                 child: ListView.builder(
-                  itemCount: _filteredContacts.length,
+                  itemCount: filtered_custom_contacts.length,
                   itemBuilder: (context, index) {
-                    final contact = _filteredContacts[index];
+                    final contact = filtered_custom_contacts[index];
                     return ListTile(
-                      title: Text(contact.displayName!),
-                      subtitle: Text(contact.phones!.first.value!),
-                      leading: CircleAvatar(
-                        child: Text(contact.initials()),
-                      ),
+                      title: Text(contact.name),
+                      subtitle: Text(contact.phoneNumber),
+                      // leading: CircleAvatar(
+                      //   child: Text(contact.initials()),
+                      // ),
                       onTap: () {
                         peopleController.text =
-                            _filteredContacts[index].displayName!;
-                        print(_filteredContacts[index].displayName);
-                        _filteredContacts.clear();
+                            filtered_custom_contacts[index].name;
+                        print(filtered_custom_contacts[index].name);
+                        filtered_custom_contacts.clear();
                         setState(() {});
                       },
                     );

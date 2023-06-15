@@ -71,4 +71,14 @@ class Person {
       return "names not updated";
     }
   }
+
+  static Future<void> deletePerson(int personId, int photoId) async {
+    int affectedRows =
+        await DbHelper.instance.deletePhotoPersonByPhotoId(photoId);
+    int photoEventCount =
+        await DbHelper.instance.getPhotoPersonCountbyPersonId(personId);
+    if (photoEventCount == 0) {
+      int affectedRows = await DbHelper.instance.deletePersonbyId(personId);
+    }
+  }
 }
