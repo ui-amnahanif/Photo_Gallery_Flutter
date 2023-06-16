@@ -233,7 +233,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
       if (data.containsKey("DateTimeOriginal")) {
         p.date_taken = data["DateTimeOriginal"].toString();
       } else {
-        p.date_taken = "2023:06:14 14:57:20";
+        p.date_taken = "2023:05:26 14:57:20";
       }
       if (data.containsKey("GPSLatitude")) {
         p.lat = double.parse(data["GPSLatitude"].toString());
@@ -514,7 +514,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                   getAllAlbums();
                 },
                 child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
-                    width! * 0.40, 0), //85 100
+                    width! * 0.40, e.plist.length), //85 100
               ),
             ),
           ],
@@ -562,7 +562,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
-                  width! * 0.40, 0), //85 100 //0.11 //0.3
+                  width! * 0.40, e.plist.length), //85 100 //0.11 //0.3
             ),
           ),
         ],
@@ -592,7 +592,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
-                  width! * 0.40, 0), //85 100
+                  width! * 0.40, e.plist.length), //85 100
             ),
           ),
         ],
@@ -622,7 +622,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
-                  width! * 0.40, 0), //85 100
+                  width! * 0.40, e.plist.length), //85 100
             ),
           ),
         ],
@@ -652,7 +652,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
-                  width! * 0.40, 0), //85 100
+                  width! * 0.40, e.plist.length), //85 100
             ),
           ),
         ],

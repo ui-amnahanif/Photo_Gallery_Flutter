@@ -66,8 +66,8 @@ class _PhotosScreenState extends State<PhotosScreen> {
         backgroundColor: primaryColor,
       ),
       body: GridView.count(
-        padding: EdgeInsets.only(top: height! * 0.020),
-        crossAxisCount: 3,
+        padding: EdgeInsets.only(top: height! * 0.010),
+        crossAxisCount: 2,
         children: [
           ...plist.map(
             (e) => GestureDetector(
@@ -94,7 +94,7 @@ class _PhotosScreenState extends State<PhotosScreen> {
                 }
               },
               child: CustomPicture(
-                  e.title, e.path, height! * 0.11, width! * 0.29), //0.138 0.31
+                  e.title, e.path, height! * 0.19, width! * 0.43), //0.138 0.31
             ),
           ),
         ],

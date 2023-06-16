@@ -7,6 +7,7 @@ class Album {
   int? id;
   late String title;
   String? cover_photo;
+  List<Photo> plist = [];
   Album();
 
   Map<String, dynamic> toMap() {
@@ -45,6 +46,7 @@ class Album {
         a = Album();
         a.id = plist[i].id;
         a.title = plist[i].name;
+        a.plist = await DbHelper.instance.getPhotosofPersonById(a.id!);
         p = await DbHelper.instance.getFirstPhotoOfPersonById(plist[i].id!);
         a.cover_photo = p.path;
         alist.add(a);
@@ -73,6 +75,7 @@ class Album {
       a = Album();
       a.id = elist[i].id;
       a.title = elist[i].name;
+      a.plist = await DbHelper.instance.getPhotosofEventById(a.id!);
       p = await DbHelper.instance.getFirstPhotoOfEventById(elist[i].id!);
       a.cover_photo = p.path;
       alist.add(a);
@@ -101,6 +104,7 @@ class Album {
       a = Album();
       a.id = photos[i].id;
       a.title = locations[i];
+      a.plist = await DbHelper.instance.getPhotosofLocationByTitle(a.title);
       a.cover_photo = photos[i].path;
       alist.add(a);
     }
@@ -115,6 +119,7 @@ class Album {
       a = Album();
       a.id = plist[i].id;
       a.title = plist[i].label!;
+      a.plist = await DbHelper.instance.getPhotosofLabelByTitle(a.title);
       a.cover_photo = plist[i].path;
       alist.add(a);
     }
@@ -129,6 +134,7 @@ class Album {
       a = Album();
       a.id = plist[i].id;
       a.title = plist[i].date_taken!.split(" ")[0];
+      a.plist = await DbHelper.instance.getPhotosofDateByPhotoId(a.id!);
       a.cover_photo = plist[i].path;
       alist.add(a);
     }
@@ -149,6 +155,7 @@ class Album {
           Photo p = await DbHelper.instance
               .getFirstPhotoOfPersonById(personlist[j].id!);
           a.cover_photo = p.path;
+          a.plist = await Photo.getPersonPhotosFromPhotosList(plist, a.id!);
           alist.add(a);
         } else if (!alist
             .where((album) => album.title == personlist[j].name)
@@ -159,6 +166,7 @@ class Album {
           Photo p = await DbHelper.instance
               .getFirstPhotoOfPersonById(personlist[j].id!);
           a.cover_photo = p.path;
+          a.plist = await Photo.getPersonPhotosFromPhotosList(plist, a.id!);
           alist.add(a);
         }
       }
@@ -181,6 +189,7 @@ class Album {
           Photo p = await DbHelper.instance
               .getFirstPhotoOfEventById(eventlist[j].id!);
           a.cover_photo = p.path;
+          a.plist = await Photo.getEventnPhotosFromPhotosList(plist, a.id!);
           alist.add(a);
         } else if (!alist
             .where((album) => album.title == eventlist[j].name)
@@ -191,6 +200,7 @@ class Album {
           Photo p = await DbHelper.instance
               .getFirstPhotoOfEventById(eventlist[j].id!);
           a.cover_photo = p.path;
+          a.plist = await Photo.getEventnPhotosFromPhotosList(plist, a.id!);
           alist.add(a);
         }
       }
@@ -220,6 +230,7 @@ class Album {
       a.id = p.id;
       a.title = p.label!;
       a.cover_photo = p.path;
+      a.plist = await Photo.getLabelPhotosFromPhotosList(plist, a.title);
       alist.add(a);
     }
     return alist;
@@ -248,6 +259,7 @@ class Album {
       a.id = p.id;
       a.title = distinctDatesList[i];
       a.cover_photo = p.path;
+      a.plist = await Photo.getDatesPhotosFromPhotosList(plist, a.id!);
       alist.add(a);
     }
     return alist;
@@ -266,12 +278,14 @@ class Album {
           a.id = plist[i].id;
           a.title = place;
           a.cover_photo = plist[i].path;
+          a.plist = await Photo.getLocationPhotosFromPhotosList(plist, a.title);
           alist.add(a);
         } else if (!alist.where((album) => album.title == place).isNotEmpty) {
           a = Album();
           a.id = plist[i].id;
           a.title = place;
           a.cover_photo = plist[i].path;
+          a.plist = await Photo.getLocationPhotosFromPhotosList(plist, a.title);
           alist.add(a);
         }
       }

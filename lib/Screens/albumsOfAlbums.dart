@@ -242,7 +242,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                 getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
-                  width! * 0.40, 0), //85 100
+                  width! * 0.40, e.plist.length), //85 100
             ),
           ),
         ],
@@ -272,7 +272,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                 getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
-                  width! * 0.40, 0), //85 100
+                  width! * 0.40, e.plist.length), //85 100
             ),
           ),
         ],
@@ -302,7 +302,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                 getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
-                  width! * 0.40, 0), //85 100
+                  width! * 0.40, e.plist.length), //85 100
             ),
           ),
         ],
@@ -332,7 +332,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
                 getAllAlbums();
               },
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
-                  width! * 0.40, 0), //85 100
+                  width! * 0.40, e.plist.length), //85 100
             ),
           ),
         ],
@@ -363,7 +363,7 @@ class _AlbumsOfAlbumsScreenState extends State<AlbumsOfAlbumsScreen>
               },
 
               child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
-                  width! * 0.40, 0), //85 100
+                  width! * 0.40, e.plist.length), //85 100
             ),
           ),
         ],
