@@ -4,6 +4,7 @@ import 'package:photo_gallery/Utilities/Global/global.dart';
 import '../DBHelper/dbhelper.dart';
 import '../Models/photo.dart';
 import '../Utilities/CustomWdigets/customalbum.dart';
+import '../Utilities/CustomWdigets/custompicture.dart';
 
 class PhotosScreen extends StatefulWidget {
   String albumTitle;
@@ -92,7 +93,8 @@ class _PhotosScreenState extends State<PhotosScreen> {
                   }
                 }
               },
-              child: CustomAlbum(null, e.path, height! * 0.138, width! * 0.31),
+              child: CustomPicture(
+                  e.title, e.path, height! * 0.11, width! * 0.29), //0.138 0.31
             ),
           ),
         ],

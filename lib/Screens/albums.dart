@@ -33,6 +33,7 @@ class _AlbummsScreenState extends State<AlbummsScreen>
   List<Album> locationAlbumsList = [];
   List<Album> dateAlbumsList = [];
   List<Album> labelAlbumsList = [];
+  //List<Photo> plistToPass = [];
   double? width;
   double? height;
   double initialScale = 1.0;
@@ -512,8 +513,8 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                   }));
                   getAllAlbums();
                 },
-                child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
-                    width! * 0.45), //85 100
+                child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
+                    width! * 0.40, 0), //85 100
               ),
             ),
           ],
@@ -560,8 +561,8 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 }));
                 getAllAlbums();
               },
-              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
-                  width! * 0.45), //85 100 //0.11 //0.3
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
+                  width! * 0.40, 0), //85 100 //0.11 //0.3
             ),
           ),
         ],
@@ -590,8 +591,8 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 }));
                 getAllAlbums();
               },
-              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
-                  width! * 0.45), //85 100
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
+                  width! * 0.40, 0), //85 100
             ),
           ),
         ],
@@ -620,8 +621,8 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 }));
                 getAllAlbums();
               },
-              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
-                  width! * 0.45), //85 100
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
+                  width! * 0.40, 0), //85 100
             ),
           ),
         ],
@@ -650,8 +651,8 @@ class _AlbummsScreenState extends State<AlbummsScreen>
                 }));
                 getAllAlbums();
               },
-              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.18,
-                  width! * 0.45), //85 100
+              child: CustomAlbum(e.title, e.cover_photo!, height! * 0.15,
+                  width! * 0.40, 0), //85 100
             ),
           ),
         ],

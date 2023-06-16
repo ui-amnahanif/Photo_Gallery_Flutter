@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:photo_gallery/Models/photo.dart';
 import 'package:photo_gallery/Screens/photoScreen.dart';
 import 'package:photo_gallery/Utilities/CustomWdigets/customalbum.dart';
+import 'package:photo_gallery/Utilities/CustomWdigets/custompicture.dart';
 import 'package:photo_gallery/Utilities/Global/global.dart';
 
 class SimplePhotosScreen extends StatefulWidget {
@@ -54,7 +55,8 @@ class _SimplePhotosScreenState extends State<SimplePhotosScreen> {
                   }
                 }
               },
-              child: CustomAlbum(null, e.path, height! * 0.138, width! * 0.31),
+              child:
+                  CustomPicture(null, e.path, height! * 0.138, width! * 0.31),
             ),
           ),
         ],
